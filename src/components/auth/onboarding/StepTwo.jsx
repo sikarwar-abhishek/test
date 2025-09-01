@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import Form from "../../common/Form";
 import FormRow from "../../common/FormRow";
 import { Controller } from "react-hook-form";
-import MultiSelectDropDown from "../../common/MultiSelectDropDown";
+import MultiSelectDropdown from "../../common/MultiSelectDropdown";
 
 function StepTwo({ form, onSubmit }) {
   const { register, control, handleSubmit, formState } = form;
@@ -85,7 +85,7 @@ function StepTwo({ form, onSubmit }) {
           name="goals"
           control={control}
           render={({ field: { onChange, value, name } }) => (
-            <MultiSelectDropDown
+            <MultiSelectDropdown
               id="goals"
               value={value}
               onChange={onChange}
