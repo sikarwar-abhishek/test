@@ -1,8 +1,8 @@
 import { ChevronDown } from "lucide-react";
-import MultiSelectDropdown from "../../common/MultiSelectDropDown";
 import Form from "../../common/Form";
 import FormRow from "../../common/FormRow";
 import { Controller } from "react-hook-form";
+import MultiSelectDropdown from "../../common/MultiSelectDropdown";
 
 function StepTwo({ form, onSubmit }) {
   const { register, control, handleSubmit, formState } = form;

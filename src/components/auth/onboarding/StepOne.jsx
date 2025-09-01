@@ -3,7 +3,6 @@ import DateInput from "../../common/DateInput";
 import Form from "../../common/Form";
 import FormRow from "../../common/FormRow";
 import isEmail from "validator/lib/isEmail";
-import { isDate } from "date-fns";
 import { Controller } from "react-hook-form";
 
 function StepOne({ handleNext, form }) {
