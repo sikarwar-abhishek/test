@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 
-function MultiSelectDropdown({
+export default function MultiSelectDropDown({
   id,
   value = [],
   onChange,
@@ -129,5 +129,3 @@ function MultiSelectDropdown({
     </div>
   );
 }
-
-export default MultiSelectDropdown;

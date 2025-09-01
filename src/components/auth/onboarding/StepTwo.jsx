@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import Form from "../../common/Form";
 import FormRow from "../../common/FormRow";
 import { Controller } from "react-hook-form";
-import MultiSelectDropdown from "../../common/MultiSelectDropdown";
+import MultiSelectDropDown from "../../common/MultiSelectDropDown";
 
 function StepTwo({ form, onSubmit }) {
   const { register, control, handleSubmit, formState } = form;
@@ -85,7 +85,7 @@ function StepTwo({ form, onSubmit }) {
           name="goals"
           control={control}
           render={({ field: { onChange, value, name } }) => (
-            <MultiSelectDropdown
+            <MultiSelectDropDown
               id="goals"
               value={value}
               onChange={onChange}
@@ -108,25 +108,6 @@ function StepTwo({ form, onSubmit }) {
             />
           )}
         />
-        {/* <MultiSelectDropdown
-          id="goals"
-          value={formData.goals || []}
-          onChange={(value) => handleInputChange("goals", value)}
-          placeholder="Select your goals"
-          required
-          options={[
-            {
-              value: "improve-cognitive-skills",
-              label: "Improve Critical Thinking",
-            },
-            { value: "daily-brain-training", label: "Develop Logic Skills" },
-            {
-              value: "compete-with-others",
-              label: "Enhance Numerical Ability",
-            },
-            { value: "learn-new-skills", label: "Boost Verbal Skills" },
-          ]}
-        /> */}
       </FormRow>
 
       {/* Finish Button */}
