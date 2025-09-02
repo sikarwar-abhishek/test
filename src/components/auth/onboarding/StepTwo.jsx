@@ -108,6 +108,25 @@ function StepTwo({ form, onSubmit }) {
             />
           )}
         />
+        {/* <MultiSelectDropdown
+          id="goals"
+          value={formData.goals || []}
+          onChange={(value) => handleInputChange("goals", value)}
+          placeholder="Select your goals"
+          required
+          options={[
+            {
+              value: "improve-cognitive-skills",
+              label: "Improve Critical Thinking",
+            },
+            { value: "daily-brain-training", label: "Develop Logic Skills" },
+            {
+              value: "compete-with-others",
+              label: "Enhance Numerical Ability",
+            },
+            { value: "learn-new-skills", label: "Boost Verbal Skills" },
+          ]}
+        /> */}
       </FormRow>
 
       {/* Finish Button */}

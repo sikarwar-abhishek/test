@@ -41,11 +41,13 @@ function LeaderboardPage() {
             </button>
           </div>
         </div>
-        {activeTab === "current" ? (
-          <CurrentWeekLeaderboard />
-        ) : (
-          <PreviousWeekLeaderboard />
-        )}
+        <div className="overflow-auto no-scrollbar">
+          {activeTab === "current" ? (
+            <CurrentWeekLeaderboard />
+          ) : (
+            <PreviousWeekLeaderboard />
+          )}
+        </div>
       </div>
     </div>
   );

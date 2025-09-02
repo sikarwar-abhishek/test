@@ -253,9 +253,9 @@ function ChallengesPage() {
               ))}
             </div>
           </div>
-          <div className="max-w-80 min-w-64 sticky top-0 hidden lg:block">
+          {/* <div className="max-w-80 min-w-64 sticky top-0 hidden lg:block">
             <FilterComponent onFilterChange={handleFilterChange} />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

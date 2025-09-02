@@ -12,7 +12,7 @@ function CurrentWeekLeaderboard() {
   return (
     <div className="py-4 flex flex-col gap-4">
       {/* Current User Position */}
-      <div className="bg-white rounded-2xl p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-4xl mx-auto w-full">
+      <div className="bg-white rounded-2xl p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-5xl mx-auto w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="w-8 h-8 text-xs text-center content-center border rounded-full">

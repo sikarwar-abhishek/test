@@ -14,7 +14,7 @@ function ChallengeCard({
       case "logic":
         return <div className={`w-6 h-6 bg-yellow-400 rounded-full`}></div>;
       case "coding":
-        return <div className={`w-6 h-6 bg-yellow-400 rounded-sm`}></div>;
+        return <div className={`w-6 h-6 bg-yellow-400 rounded-full`}></div>;
       case "math":
         return (
           <div
@@ -27,7 +27,7 @@ function ChallengeCard({
   };
 
   return (
-    <div className="flex items-start font-poppins gap-4 p-4 border border-border rounded-lg shadow-sm">
+    <div className="flex items-start font-poppins gap-4 p-4 border-b">
       <div
         className={`w-10 h-10 z-20 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0`}
       >

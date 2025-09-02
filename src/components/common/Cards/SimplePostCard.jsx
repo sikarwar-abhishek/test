@@ -12,7 +12,7 @@ function SimplePostCard({
   showAction = true,
 }) {
   return (
-    <div className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card">
+    <div className="flex items-center gap-4 p-4 border-b last:border-none">
       <div className="w-10 h-10 z-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
         <Image
           width={40}

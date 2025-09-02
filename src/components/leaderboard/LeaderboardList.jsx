@@ -44,7 +44,7 @@ const leaderboardData = [
 ];
 function LeaderboardList({ date = "" }) {
   return (
-    <div className="bg-blue-50 rounded-3xl p-6 max-w-4xl mx-auto w-full">
+    <div className="bg-blue-50 rounded-3xl p-6 max-w-5xl mx-auto w-full">
       {date ? (
         <div className="text-center mb-6">
           <span className="bg-white px-4 py-2 text-blue-600 font-poppins rounded-lg font-medium text-lg drop-shadow-[0_0_2px_#4676FA33]">

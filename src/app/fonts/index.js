@@ -1,12 +1,5 @@
 import localFont from "next/font/local";
-import {
-  Inter,
-  Mona_Sans,
-  Montserrat,
-  Open_Sans,
-  Poppins,
-  Rubik,
-} from "next/font/google";
+import { Inter, Montserrat, Open_Sans, Poppins, Rubik } from "next/font/google";
 
 const fDemoBold = localFont({
   src: "./local/FDEMO-bold.woff2",
@@ -64,11 +57,11 @@ const opensans = Open_Sans({
   weight: ["300", "400", "500", "600", "700"],
 });
 
-const monasans = Mona_Sans({
+const monasans = localFont({
+  src: "./local/monasans.woff2",
   variable: "--font-mona-sans",
   display: "swap",
-  subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700"],
+  weight: "100 900",
 });
 
 const inter = Inter({

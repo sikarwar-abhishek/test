@@ -6,9 +6,11 @@ import Image from "next/image";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 
 function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
+  const router = useRouter();
   const form = useForm({
     defaultValues: {
       DOB: "",
@@ -30,6 +32,7 @@ function OnboardingPage() {
 
   const handleSubmit = (data) => {
     console.log("Onboarding data:", data);
+    router.push("/home");
   };
 
   return (

@@ -59,6 +59,7 @@ function PreviousWeekLeaderboard() {
     { id: 3, title: "Leaderboard_Title", date: "13 April 2025" },
     { id: 4, title: "Leaderboard_Title", date: "14 April 2025" },
     { id: 5, title: "Leaderboard_Title", date: "15 April 2025" },
+    { id: 6, title: "Leaderboard_Title", date: "16 April 2025" },
   ];
 
   const handleLeaderboardClick = (leaderboard) => {
@@ -70,7 +71,7 @@ function PreviousWeekLeaderboard() {
   };
 
   return !selectedLeaderboard ? (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full p-4 border border-gray-200 rounded-xl shadow-sm">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full p-4 border border-gray-200 rounded-xl shadow-sm mb-6">
       {previousLeaderboards.map((leaderboard) => (
         <div
           key={leaderboard.id}

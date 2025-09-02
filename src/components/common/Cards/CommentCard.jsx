@@ -14,7 +14,7 @@ function CommentCard({
   const actualOtherCount = otherCount || Math.max(0, commenters.length - 2);
 
   return (
-    <div className="flex items-start gap-4 p-4 border border-border rounded-lg bg-card text-[15px]">
+    <div className="flex items-start gap-4 p-4 text-[15px] border-b">
       <div className="w-10 z-20 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
         <Image
           width={40}
