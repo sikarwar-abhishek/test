@@ -14,6 +14,7 @@ import {
   segeo,
 } from "@/src/app/fonts";
 import SideBar from "@/src/components/common/SideBar";
+import ProtectedLayoutWrapper from "@/src/components/ProtectedLayoutWrapper";
 
 export const metadata = {
   title: "DailyIQ",
@@ -27,10 +28,7 @@ export default function RootLayout({ children }) {
         className={`${fDemoBold.variable} ${fDemoRegular.variable} ${nunitoSans.variable} ${roboto.className} ${poppins.variable} ${segeo.variable} ${montserrat.variable} ${opensans.variable} ${monasans.variable} ${inter.variable} ${rubik.variable} antialiased`}
       >
         <Providers>
-          <div className="flex">
-            <SideBar />
-            {children}
-          </div>
+          <ProtectedLayoutWrapper>{children}</ProtectedLayoutWrapper>
         </Providers>
       </body>
     </html>

@@ -1,7 +1,18 @@
+"use client";
+
 import Image from "next/image";
 import HomePageHeader from "../common/HomePageHeader";
 import Icon from "../common/Icon";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Router } from "lucide-react";
+import LogOutPopup from "./LogOutPopup";
+import EditProfile from "./EditProfile";
+import { useState } from "react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useLocalStorageState } from "@/src/hooks/useLocalStorageState";
+import useQueryHandler from "@/src/hooks/useQueryHandler";
+import { getUserProfile } from "@/src/api/auth";
+
 const settingsOptions = [
   {
     id: 1,
@@ -24,7 +35,50 @@ const settingsOptions = [
     title: "Log Out",
   },
 ];
+
 function SettingsPage() {
+  const router = useRouter();
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const { data, isLoading } = useQueryHandler(getUserProfile, {
+    queryKey: ["user_profile"],
+  });
+
+  const handleLogout = () => {
+    setShowLogoutPopup(false);
+    Cookies.remove("authToken");
+    Cookies.remove("refresh_token");
+    router.push("/");
+  };
+
+  const handleOptionClick = (optionId) => {
+    if (optionId === 1) {
+      // Edit Profile
+      setShowEditProfile(true);
+    } else if (optionId === 5) {
+      // Log Out
+      setShowLogoutPopup(true);
+    }
+  };
+
+  const handleBackToSettings = () => {
+    setShowEditProfile(false);
+  };
+
+  // If edit profile is active, show EditProfile component
+  if (showEditProfile) {
+    return (
+      <div className="flex flex-1 max-h-screen overflow-auto">
+        <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
+          <HomePageHeader text={"My Profile"} onBack={handleBackToSettings} />
+          <EditProfile onBack={handleBackToSettings} />
+        </div>
+      </div>
+    );
+  }
+  if (isLoading) return <p>Loading..</p>;
+  const value = data?.data;
+
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
@@ -56,14 +110,14 @@ function SettingsPage() {
               </div>
               <div className="flex mx-auto items-center font-poppins">
                 <span className="font-medium text-xl text-black leading-4">
-                  John Doe
+                  {value?.first_name} {value?.last_name}
                 </span>
                 {/* <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-md font-semibold">
                   Pro
                 </span> */}
               </div>
               <span className="font-poppins text-gray-500 text-center font-normal">
-                johndoe@fakemail.com
+                {value?.email}
               </span>
             </div>
           </div>
@@ -74,6 +128,7 @@ function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {settingsOptions.map((option) => (
                 <div
+                  onClick={() => handleOptionClick(option.id)}
                   key={option.id}
                   className="flex items-center justify-between py-3 px-2 bg-[#588DFF]/5 hover:bg-gray-100 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm shadow-md drop-shadow-sm border-gray-200"
                 >
@@ -90,6 +145,11 @@ function SettingsPage() {
           </div>
         </div>
       </div>
+      <LogOutPopup
+        isOpen={showLogoutPopup}
+        onClose={() => setShowLogoutPopup(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

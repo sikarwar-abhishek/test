@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import HomePageHeader from "../common/HomePageHeader";
 import Icon from "../common/Icon";
 import { ProficiencyGraph, ScoreChart } from "../Home/ScoreCharts";
+import useQueryHandler from "@/src/hooks/useQueryHandler";
+import { practiceProgress } from "@/src/api/practice";
 
 const data = [
   {
@@ -49,6 +53,16 @@ const data = [
 ];
 
 function PracticePage() {
+  const { data, isLoading, error } = useQueryHandler(practiceProgress, {
+    queryKey: ["practice_progress"],
+  });
+
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p> Error</p>;
+  const { total_training_puzzles, charts } = data?.data;
+  const { trainingAccuracy, trainingPuzzlesAttempted, trainingSubmissions } =
+    charts;
+  const hasChartData = charts && Object.keys(charts).length > 0;
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
@@ -59,33 +73,64 @@ function PracticePage() {
           <div className="flex gap-2">
             <Icon name={"clock"} className={"w-6 h-6"} />
             <p className="font-opensans text-[#757575]">
-              Estimated Time :
-              <span className="font-bold text-blue-600">12 mins</span>
+              Estimated Time:&nbsp;
+              <span className="font-bold text-blue-600">
+                {total_training_puzzles * 3} mins
+              </span>
             </p>
           </div>
 
           <div className="flex gap-2">
             <Icon name={"clock"} className={"w-6 h-6"} />
             <p className="font-opensans text-[#757575]">
-              Puzzles :<span className="font-bold text-blue-600">12</span>
+              Puzzles:&nbsp;
+              <span className="font-bold text-blue-600">
+                {total_training_puzzles}
+              </span>
             </p>
           </div>
         </div>
-        <div className="relative overflow-auto no-scrollbar">
-          <div className="grid sm:grid-cols-2 grid-cols-1 gap-6">
-            <ScoreChart title="Training Accuracy">
-              <ProficiencyGraph dataKey={"fitnessScore"} />
-            </ScoreChart>
-            <ScoreChart title="Training Puzzles Attempted">
-              <ProficiencyGraph dataKey={"communityScore"} />
-            </ScoreChart>
-            <div className="col-span-2">
-              <ScoreChart title="Training Submissions">
-                <ProficiencyGraph dataKey={"communityScore"} />
+        {hasChartData ? (
+          <div className="relative overflow-auto no-scrollbar">
+            <div className="grid sm:grid-cols-2 grid-cols-1 gap-6">
+              <ScoreChart
+                title="Training Accuracy"
+                tooltip="Your training accuracy over time."
+              >
+                <ProficiencyGraph
+                  data={trainingAccuracy}
+                  dataKey={"fitnessScore"}
+                />
               </ScoreChart>
+              <ScoreChart
+                title="Training Puzzles Attempted"
+                tooltip="Number of puzzles attempted."
+              >
+                <ProficiencyGraph
+                  data={trainingPuzzlesAttempted}
+                  dataKey={"communityScore"}
+                />
+              </ScoreChart>
+              <div className="col-span-2">
+                <ScoreChart
+                  title="Training Submissions"
+                  tooltip="Your submission over time."
+                >
+                  <ProficiencyGraph
+                    data={trainingSubmissions}
+                    dataKey={"communityScore"}
+                  />
+                </ScoreChart>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-center flex-1 py-20">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
+              Start Practicing to show progress
+            </h2>
+          </div>
+        )}
 
         <Link
           href={"/practice/challenges"}

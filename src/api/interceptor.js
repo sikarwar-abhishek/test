@@ -1,14 +1,38 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 export const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const getToken = () => localStorage.getItem("accessToken");
-export const getRefreshToken = () => localStorage.getItem("refreshToken");
+const API_HEADERS_DEV = {
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+};
+
+const API_HEADERS_PROD = {
+  "Content-Type": "application/json",
+};
+
+const headers =
+  process.env.NEXT_PUBLIC_MODE === "development"
+    ? { ...API_HEADERS_DEV }
+    : { ...API_HEADERS_PROD };
+
+export const setAuthToken = (token) => {
+  Cookies.set("authToken", token, {
+    secure: process.env.NEXT_PUBLIC_MODE === "production",
+    sameSite: "Lax",
+  });
+};
+
+export const getToken = () => Cookies.get("authToken");
+export const removeToken = () => Cookies.remove("authToken");
+export const getRefreshToken = () => {
+  console.log(Cookies.get("refresh_token"));
+  return Cookies.get("refresh_token");
+};
 
 const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers,
 });
 
 let isRefreshing = false;
@@ -49,11 +73,11 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       const refreshToken = getRefreshToken();
-
+      console.log(refreshToken);
       if (!refreshToken) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        // window.location.href = "/login";
         return Promise.reject(error);
       }
 
@@ -72,8 +96,8 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          `${BASE_URL}/refresh/`,
-          { refresh_token: refreshToken },
+          `${BASE_URL}/api/user/refresh/`,
+          { refresh: refreshToken },
           {
             headers: {
               "Content-Type": "application/json",
@@ -81,11 +105,10 @@ api.interceptors.response.use(
           }
         );
 
-        const newAccessToken = response.data.access;
-        localStorage.setItem("accessToken", newAccessToken);
-
+        const newAccessToken = response.data.data.access;
+        localStorage.setItem("authToken", newAccessToken);
+        setAuthToken(newAccessToken);
         processQueue(null, newAccessToken);
-
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {

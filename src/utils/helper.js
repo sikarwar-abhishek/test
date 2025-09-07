@@ -1,5 +1,15 @@
+import { format } from "date-fns";
 import Icon from "../components/common/Icon";
 
+export function getFormatedDate(date, formatType = "yyyy-MM-dd") {
+  return format(date, formatType);
+}
+
+export const wait = (time) => {
+  return new Promise((res) => {
+    setTimeout(res, time * 1000);
+  });
+};
 export const getAvatarBorderColor = (rank) => {
   if (rank === 1) return "border-yellow-500";
   if (rank === 2) return "border-gray-400";

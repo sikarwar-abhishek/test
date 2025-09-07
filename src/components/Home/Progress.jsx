@@ -1,6 +1,8 @@
 "use client";
+import useQueryHandler from "@/src/hooks/useQueryHandler";
 import Icon from "../common/Icon";
 import ScoreCharts from "./ScoreCharts";
+import { userProgress } from "@/src/api/home";
 
 function ScoreCard({ icon, score, label }) {
   return (
@@ -13,14 +15,40 @@ function ScoreCard({ icon, score, label }) {
 }
 
 function Progress() {
+  const { data, isLoading, error } = useQueryHandler(userProgress, {
+    queryKey: ["user_progress"],
+  });
+
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p> Error</p>;
+  const {
+    proficiencyScore,
+    communityScore,
+    fitnessScore,
+    bestPuzzleType,
+    tooltips,
+    charts,
+  } = data;
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ScoreCard icon="price" score="3.5" label="Proficiency Score" />
-        <ScoreCard icon="award" score="1900" label="Community Score" />
-        <ScoreCard icon="dumbbell" score="70" label="Fitness Score" />
+        <ScoreCard
+          icon="price"
+          score={proficiencyScore}
+          label="Proficiency Score"
+        />
+        <ScoreCard
+          icon="award"
+          score={communityScore}
+          label="Community Score"
+        />
+        <ScoreCard icon="dumbbell" score={fitnessScore} label="Fitness Score" />
       </div>
-      <ScoreCharts />
+      <ScoreCharts
+        bestPuzzleType={bestPuzzleType}
+        tooltips={tooltips}
+        charts={charts}
+      />
     </div>
   );
 }

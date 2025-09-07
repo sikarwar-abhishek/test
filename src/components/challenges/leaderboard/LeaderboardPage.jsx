@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import HomePageHeader from "../common/HomePageHeader";
-import Icon from "../common/Icon";
+import HomePageHeader from "../../common/HomePageHeader";
 import CurrentWeekLeaderboard from "./CurrentWeekLeaderboard";
 import PreviousWeekLeaderboard from "./PreviousWeekLeaderboard";
 
-function LeaderboardPage() {
+function LeaderboardPage({ challengeId }) {
   const [activeTab, setActiveTab] = useState("current");
-
-  // Mock data for leaderboard
 
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
@@ -43,7 +40,7 @@ function LeaderboardPage() {
         </div>
         <div className="overflow-auto no-scrollbar">
           {activeTab === "current" ? (
-            <CurrentWeekLeaderboard />
+            <CurrentWeekLeaderboard challengeId={challengeId} />
           ) : (
             <PreviousWeekLeaderboard />
           )}

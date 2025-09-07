@@ -5,71 +5,73 @@ import HomePageHeader from "../common/HomePageHeader";
 import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
-const challenges = [
-  {
-    id: 1,
-    title: "Daily Challenge",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 2,
-    title: "Challenge_1",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 3,
-    title: "Challenge_2",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 4,
-    title: "Challenge_3",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 5,
-    title: "Challenge_4",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 6,
-    title: "Challenge_5",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 7,
-    title: "Challenge_5",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 8,
-    title: "Challenge_5",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-  {
-    id: 9,
-    title: "Challenge_5",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-    imageSrc: "/asset/mug.jpg",
-  },
-];
+import useQueryHandler from "@/src/hooks/useQueryHandler";
+import { getChallenges } from "@/src/api/challenges";
+// const challenges = [
+//   {
+//     id: 1,
+//     title: "Daily Challenge",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 2,
+//     title: "Challenge_1",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 3,
+//     title: "Challenge_2",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 4,
+//     title: "Challenge_3",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 5,
+//     title: "Challenge_4",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 6,
+//     title: "Challenge_5",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 7,
+//     title: "Challenge_5",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 8,
+//     title: "Challenge_5",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+//   {
+//     id: 9,
+//     title: "Challenge_5",
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+//     imageSrc: "/asset/mug.jpg",
+//   },
+// ];
 
 function FilterComponent({ onFilterChange }) {
   const [selectedFilters, setSelectedFilters] = useState(["All"]);
@@ -185,11 +187,12 @@ function FilterComponent({ onFilterChange }) {
 function ChallengeCard({
   title = "Daily Challenge",
   description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
+  challengeId,
   imageSrc = "/asset/mug.jpg",
   onStartChallenge,
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden drop-shadow-sm border border-[#000000] border-opacity-[0.12] hover:shadow-md transition-shadow duration-300">
+    <div className="bg-white rounded-2xl flex flex-col shadow-sm overflow-hidden drop-shadow-sm border border-[#000000] border-opacity-[0.12] hover:shadow-md transition-shadow duration-300">
       {/* Image Section */}
       <div className="relative aspect-square w-full rounded-lg p-2 max-h-48">
         <div className="relative w-full h-full rounded-xl overflow-hidden">
@@ -199,15 +202,15 @@ function ChallengeCard({
       </div>
 
       {/* Content Section */}
-      <div className="p-4 space-y-4">
-        <h3 className="text-lg font-poppins font-semibold">{title}</h3>
-
-        <p className="text-[#757575] font-opensans font-normal text-sm leading-relaxed">
-          {description}
-        </p>
-
+      <div className="p-4 flex flex-col flex-1 justify-between gap-2">
+        <div className="space-y-4">
+          <h3 className="text-lg font-poppins font-semibold">{title}</h3>
+          <p className="text-[#757575] font-opensans font-normal text-sm leading-relaxed">
+            {description}
+          </p>
+        </div>
         <Link
-          href={"/challenges/logic"}
+          href={`/challenges/${challengeId}`}
           onClick={onStartChallenge}
           className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold font-poppins py-2 px-4 rounded-xl transition-colors duration-200"
         >
@@ -220,10 +223,18 @@ function ChallengeCard({
 
 function ChallengesPage() {
   const [activeFilters, setActiveFilters] = useState(["All"]);
+  const {
+    data: challenges,
+    isLoading,
+    error,
+  } = useQueryHandler(getChallenges, {
+    queryKey: ["challenges"],
+  });
 
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p> Error</p>;
   const handleStartChallenge = (challengeId) => {
     console.log(`Starting challenge ${challengeId}`);
-    // Add your challenge start logic here
   };
 
   const handleFilterChange = (filters) => {
@@ -238,16 +249,17 @@ function ChallengesPage() {
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
-        <HomePageHeader text={"Challenges"} />
+        <HomePageHeader text={"Challenges"} search />
         <div className="flex gap-8 overflow-auto no-scrollbar">
-          <div className="flex-1 min-h-screen">
+          <div className="flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredChallenges.map((challenge) => (
                 <ChallengeCard
                   key={challenge.id}
-                  title={challenge.title}
+                  title={challenge.name}
                   description={challenge.description}
-                  imageSrc={challenge.imageSrc}
+                  challengeId={challenge.id}
+                  imageSrc={challenge.image || undefined}
                   onStartChallenge={() => handleStartChallenge(challenge.id)}
                 />
               ))}

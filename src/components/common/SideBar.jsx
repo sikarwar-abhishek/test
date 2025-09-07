@@ -5,31 +5,10 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import Icon from "./Icon";
 import { HOME_NAV } from "@/src/constants/constant";
+import { useLocalStorageState } from "@/src/hooks/useLocalStorageState";
+import useQueryHandler from "@/src/hooks/useQueryHandler";
+import { getUserProfile } from "@/src/api/auth";
 
-// function NavButton({ icon, text, href }) {
-//   const pathname = usePathname();
-//   const isActive = href === pathname;
-
-//   return (
-//     <Link href={href} className="relative block">
-//       <motion.div
-//         className="flex items-center gap-4 py-2 px-6 rounded-4xl font-sans "
-//         whileHover={{ backgroundColor: isActive ? "#eff6ff" : "#f3f4f6" }}
-//         animate={{ backgroundColor: isActive ? "#eff6ff" : "#ffffff" }}
-//         transition={{ duration: 0.2 }}
-//       >
-//         <Icon name={icon} className="w-6 h-6 " />
-//         <span
-//           className={`font-normal leading-8  ${
-//             isActive ? "text-blue-600" : "text-gray-400"
-//           }`}
-//         >
-//           {text}
-//         </span>
-//       </motion.div>
-//     </Link>
-//   );
-// }
 function NavButton({ icon, text, href }) {
   const pathname = usePathname();
   const isActive = href === "/" + pathname.split("/")[1];
@@ -58,6 +37,12 @@ function NavButton({ icon, text, href }) {
   );
 }
 export default function SideBar() {
+  // const [value] = useLocalStorageState(null, "user");
+  const { data, isLoading } = useQueryHandler(getUserProfile, {
+    queryKey: ["user_profile"],
+  });
+  if (isLoading) return <p>Loading..</p>;
+  const value = data?.data;
   return (
     <div className="w-[280px] border-r gap-6 bg-white min-h-screen hidden lg:flex flex-col">
       {/* Header */}
@@ -126,7 +111,7 @@ export default function SideBar() {
             </p>
             <div className="flex items-center gap-2">
               <span className="font-medium font-poppins text-sm text-black">
-                John Doe
+                {value?.first_name} {value?.last_name}
               </span>
               {/* <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-md font-medium">
                 Pro

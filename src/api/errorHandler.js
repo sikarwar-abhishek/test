@@ -1,3 +1,4 @@
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
 export const ERROR_TYPES = {
@@ -6,17 +7,18 @@ export const ERROR_TYPES = {
   NOT_FOUND: "NOT_FOUND",
   VALIDATION: "VALIDATION",
   SERVER_ERROR: "SERVER_ERROR",
-  NETWORK_ERROR: "NETWORK_ERROR",
+  NETWORK_ERROR: "ERR_NETWORK",
   UNKNOWN: "UNKNOWN",
+  TRIAL_EXPIRED: "TRIAL_EXPIRED",
 };
 
-export const handleApiError = (error, customMessage = null) => {
+export const handleApiError = (error, customMessage = "") => {
   let errorType = ERROR_TYPES.UNKNOWN;
+
   let errorMessage = customMessage || "An error occurred";
 
   if (error.response) {
     const { status, data } = error.response;
-
     switch (status) {
       case 400:
         errorType = ERROR_TYPES.VALIDATION;
@@ -25,17 +27,18 @@ export const handleApiError = (error, customMessage = null) => {
       case 401:
         errorType = ERROR_TYPES.UNAUTHORIZED;
         errorMessage = "Please login to continue";
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        Cookies.remove("authToken");
         window.location.href = "/login";
         break;
       case 403:
         errorType = ERROR_TYPES.FORBIDDEN;
-        errorMessage = "You do not have permission to perform this action";
+        errorMessage =
+          data?.data?.message ||
+          "You do not have permission to perform this action";
         break;
       case 404:
         errorType = ERROR_TYPES.NOT_FOUND;
-        errorMessage = data?.message || "Resource not found";
+        errorMessage = "Resource not found" && data?.data?.message;
         break;
       case 422:
         errorType = ERROR_TYPES.VALIDATION;
@@ -52,12 +55,8 @@ export const handleApiError = (error, customMessage = null) => {
     errorType = ERROR_TYPES.NETWORK_ERROR;
     errorMessage = "Network error - please check your connection";
   }
-
-  toast({
-    title: getErrorTitle(errorType),
-    description: errorMessage,
-    status: "error",
-  });
+  // console.log(errorType, errorMessage);
+  toast.error(errorMessage);
 
   return {
     type: errorType,

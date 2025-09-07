@@ -55,7 +55,7 @@ export default function MultiSelectDropdown({
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className={`w-full min-h-[48px] px-4 py-3 pr-12 font-inter border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent outline-none transition-all bg-[#E7EEFF80] cursor-pointer ${className}`}
+        className={`w-full min-h-[48px] px-4 py-3 pr-12 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus-within:border-transparent outline-none transition-all  bg-[#E7EEFF80] cursor-pointer ${className}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         {/* Selected Tags */}

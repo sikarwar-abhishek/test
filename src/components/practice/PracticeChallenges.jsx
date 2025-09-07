@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import HomePageHeader from "../common/HomePageHeader";
+import useQueryHandler from "@/src/hooks/useQueryHandler";
+import { getPracticePuzzlesDaily } from "@/src/api/practice";
 
 function PracticeChallenges() {
   const [currentPuzzle, setCurrentPuzzle] = useState(1);
@@ -11,6 +13,13 @@ function PracticeChallenges() {
   const [answerState, setAnswerState] = useState("initial");
   const [submittedAnswer, setSubmittedAnswer] = useState("");
 
+  const { data, isLoading, error } = useQueryHandler(getPracticePuzzlesDaily, {
+    queryKey: ["practice_puzzles_daily"],
+  });
+
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p> Error</p>;
+  const { total_puzzles } = data?.data;
   // Mock puzzle data
   const puzzleData = {
     question: "Puzzle from backend",
@@ -105,7 +114,7 @@ function PracticeChallenges() {
           {/* Progress indicator */}
           <div className="flex justify-end">
             <div className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold">
-              {currentPuzzle}/{totalPuzzles}
+              {currentPuzzle}/{total_puzzles}
             </div>
           </div>
 

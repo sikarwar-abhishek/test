@@ -2,23 +2,22 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Eye, EyeOff } from "lucide-react";
 import LoginForm from "./LoginForm";
+import OTPStep from "./OTPStep";
+import OnboardingPage from "../onboarding/OnboardingPage";
+import { useForm } from "react-hook-form";
 
 function LoginPage() {
-  const [rememberMe, setRememberMe] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Login attempt:", { email, password, rememberMe });
-  };
-
+  const [currentStep, setCurrentStep] = useState(1);
+  const [otp, setOtp] = useState("");
+  const form = useForm();
+  const { watch } = form;
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16">
-        {/* Logo */}
-        <div className="flex items-center gap-4">
+      <div className="flex-1 flex flex-col px-8 sm:px-12 lg:px-16">
+        {/* Logo - Fixed at top */}
+        <div className="flex items-center gap-4 pt-8 pb-4">
           <div className="relative aspect-square w-38 h-10">
             <Image
               src={"/asset/logo-black.png"}
@@ -29,17 +28,24 @@ function LoginPage() {
           </div>
         </div>
 
-        {/* Form Container */}
-        <div className="flex mt-2 flex-col w-full">
-          {/* Header */}
-          <div className="text-center font-poppins space-y-2 my-4">
-            <h1 className="text-3xl font-bold">Get Started</h1>
-            <p className="text-gray-500">Sign in to your account</p>
-          </div>
-
-          {/* Login Form */}
+        {/* Form Container - Centered */}
+        <div className="flex-1 flex flex-col justify-center">
           <div className="max-w-lg w-full mx-auto">
-            <LoginForm />
+            {currentStep === 1 && (
+              <LoginForm setCurrentStep={setCurrentStep} form={form} />
+            )}
+            {currentStep === 2 && (
+              <OTPStep
+                key="otp"
+                otp={otp}
+                setOtp={setOtp}
+                email={watch("email")}
+                setCurrentStep={setCurrentStep}
+              />
+            )}
+            {currentStep === 3 && (
+              <OnboardingPage email={watch("email")} otp={otp} />
+            )}
           </div>
         </div>
       </div>
