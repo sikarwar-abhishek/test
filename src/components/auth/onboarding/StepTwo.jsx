@@ -3,7 +3,7 @@ import Form from "../../common/Form";
 import FormRow from "../../common/FormRow";
 import { Controller } from "react-hook-form";
 import MultiSelectDropdown from "../../common/MultiSelectDropdown";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LOCATIONS, AVAILABLE_JOBPROFILES } from "@/src/constants/constant";
 
 const cities = LOCATIONS;
@@ -13,10 +13,76 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [jobProfileQuery, setJobProfileQuery] = useState("");
   const [showJobProfileDropdown, setShowJobProfileDropdown] = useState(false);
+  const [locationClearTimeout, setLocationClearTimeout] = useState(null);
+  const [jobProfileClearTimeout, setJobProfileClearTimeout] = useState(null);
 
   const options = goals?.map((goal) => ({ value: goal.id, label: goal.name }));
-  const { register, control, handleSubmit, formState, setValue } = form;
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState,
+    watch,
+    setError,
+    clearErrors,
+  } = form;
   const { errors } = formState;
+
+  // Watch form values to validate selections
+  const locationValue = watch("location");
+  const jobProfileValue = watch("job_profile");
+
+  // Validate location selection
+  useEffect(() => {
+    if (locationValue && !LOCATIONS.includes(locationValue)) {
+      setError("location", {
+        type: "manual",
+        message: "Please select a valid location from the dropdown list",
+      });
+    } else if (locationValue && LOCATIONS.includes(locationValue)) {
+      clearErrors("location");
+    }
+  }, [locationValue, setError, clearErrors]);
+
+  // Validate job profile selection
+  useEffect(() => {
+    if (jobProfileValue && !AVAILABLE_JOBPROFILES.includes(jobProfileValue)) {
+      setError("job_profile", {
+        type: "manual",
+        message: "Please select a valid job profile from the dropdown list",
+      });
+    } else if (
+      jobProfileValue &&
+      AVAILABLE_JOBPROFILES.includes(jobProfileValue)
+    ) {
+      clearErrors("job_profile");
+    }
+  }, [jobProfileValue, setError, clearErrors]);
+
+  // Initialize query states with existing form values
+  useEffect(() => {
+    if (locationValue && LOCATIONS.includes(locationValue)) {
+      setLocationQuery(locationValue);
+    }
+  }, [locationValue]);
+
+  useEffect(() => {
+    if (jobProfileValue && AVAILABLE_JOBPROFILES.includes(jobProfileValue)) {
+      setJobProfileQuery(jobProfileValue);
+    }
+  }, [jobProfileValue]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (locationClearTimeout) {
+        clearTimeout(locationClearTimeout);
+      }
+      if (jobProfileClearTimeout) {
+        clearTimeout(jobProfileClearTimeout);
+      }
+    };
+  }, [locationClearTimeout, jobProfileClearTimeout]);
 
   const filteredCities =
     cities?.filter((city) =>
@@ -27,18 +93,6 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
     AVAILABLE_JOBPROFILES?.filter((profile) =>
       profile.toLowerCase().includes(jobProfileQuery.toLowerCase())
     ) || [];
-
-  const handleLocationSelect = (city) => {
-    setValue("location", city);
-    setLocationQuery(city);
-    setShowLocationDropdown(false);
-  };
-
-  const handleJobProfileSelect = (profile) => {
-    setValue("job_profile", profile);
-    setJobProfileQuery(profile);
-    setShowJobProfileDropdown(false);
-  };
 
   return (
     <Form onSubmit={handleSubmit(onSubmit)} className="">
@@ -89,37 +143,80 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
                 <input
                   id={name}
                   type="text"
-                  placeholder="Type Here"
+                  placeholder="Type to search locations..."
                   value={locationQuery}
                   onChange={(e) => {
                     const inputValue = e.target.value;
                     setLocationQuery(inputValue);
-                    onChange(inputValue);
+
+                    // Clear any existing timeout
+                    if (locationClearTimeout) {
+                      clearTimeout(locationClearTimeout);
+                    }
+
+                    // Only update form value if it's a valid selection
+                    if (LOCATIONS.includes(inputValue)) {
+                      onChange(inputValue);
+                    } else {
+                      // Clear form value if input doesn't match any location
+                      onChange("");
+
+                      // Set timeout to clear input if no valid selection after 2 seconds
+                      if (inputValue.length > 0) {
+                        const timeout = setTimeout(() => {
+                          const hasMatch = LOCATIONS.some((location) =>
+                            location
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase())
+                          );
+                          if (!hasMatch) {
+                            setLocationQuery("");
+                          }
+                        }, 2000);
+                        setLocationClearTimeout(timeout);
+                      }
+                    }
+
                     setShowLocationDropdown(inputValue.length > 0);
                   }}
-                  onFocus={() =>
-                    locationQuery.length > 0 && setShowLocationDropdown(true)
-                  }
-                  onBlur={() =>
-                    setTimeout(() => setShowLocationDropdown(false), 200)
-                  }
-                  className="w-full px-4 py-3 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowLocationDropdown(false);
+                      // Clear input if no valid selection was made
+                      if (locationQuery && !LOCATIONS.includes(locationQuery)) {
+                        setLocationQuery("");
+                      }
+                    }, 200);
+                  }}
+                  onFocus={() => {
+                    setShowLocationDropdown(true);
+                  }}
+                  className={`w-full px-4 py-3 font-inter border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80] ${
+                    errors?.location ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {showLocationDropdown && filteredCities.length > 0 && (
+                {showLocationDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredCities.map((city) => (
-                      <div
-                        key={city}
-                        onClick={() => {
-                          onChange(city);
-                          setLocationQuery(city);
-                          setShowLocationDropdown(false);
-                        }}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-inter text-sm"
-                      >
-                        {city}
+                    {filteredCities.length > 0 ? (
+                      filteredCities.map((city) => (
+                        <div
+                          key={city}
+                          onMouseDown={() => {
+                            onChange(city);
+                            setLocationQuery(city);
+                            setShowLocationDropdown(false);
+                          }}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-inter text-sm"
+                        >
+                          {city}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-gray-500 font-inter text-sm">
+                        No locations found. Please select from available
+                        options.
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </>
@@ -145,38 +242,84 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
                 <input
                   id={name}
                   type="text"
-                  placeholder="Type Here"
+                  placeholder="Type to search job profiles..."
                   value={jobProfileQuery}
                   onChange={(e) => {
                     const inputValue = e.target.value;
                     setJobProfileQuery(inputValue);
-                    onChange(inputValue);
+
+                    // Clear any existing timeout
+                    if (jobProfileClearTimeout) {
+                      clearTimeout(jobProfileClearTimeout);
+                    }
+
+                    // Only update form value if it's a valid selection
+                    if (AVAILABLE_JOBPROFILES.includes(inputValue)) {
+                      onChange(inputValue);
+                    } else {
+                      // Clear form value if input doesn't match any job profile
+                      onChange("");
+
+                      // Set timeout to clear input if no valid selection after 2 seconds
+                      if (inputValue.length > 0) {
+                        const timeout = setTimeout(() => {
+                          const hasMatch = AVAILABLE_JOBPROFILES.some(
+                            (profile) =>
+                              profile
+                                .toLowerCase()
+                                .includes(inputValue.toLowerCase())
+                          );
+                          if (!hasMatch) {
+                            setJobProfileQuery("");
+                          }
+                        }, 2000);
+                        setJobProfileClearTimeout(timeout);
+                      }
+                    }
+
                     setShowJobProfileDropdown(inputValue.length > 0);
                   }}
-                  onFocus={() =>
-                    jobProfileQuery.length > 0 &&
-                    setShowJobProfileDropdown(true)
-                  }
-                  onBlur={() =>
-                    setTimeout(() => setShowJobProfileDropdown(false), 200)
-                  }
-                  className="w-full px-4 py-3 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
+                  onFocus={() => {
+                    setShowJobProfileDropdown(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowJobProfileDropdown(false);
+                      // Clear input if no valid selection was made
+                      if (
+                        jobProfileQuery &&
+                        !AVAILABLE_JOBPROFILES.includes(jobProfileQuery)
+                      ) {
+                        setJobProfileQuery("");
+                      }
+                    }, 200);
+                  }}
+                  className={`w-full px-4 py-3 font-inter border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80] ${
+                    errors?.job_profile ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                {showJobProfileDropdown && filteredJobProfiles.length > 0 && (
+                {showJobProfileDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredJobProfiles.slice(0, 10).map((profile) => (
-                      <div
-                        key={profile}
-                        onClick={() => {
-                          onChange(profile);
-                          setJobProfileQuery(profile);
-                          setShowJobProfileDropdown(false);
-                        }}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-inter text-sm"
-                      >
-                        {profile}
+                    {filteredJobProfiles.length > 0 ? (
+                      filteredJobProfiles.map((profile) => (
+                        <div
+                          key={profile}
+                          onMouseDown={() => {
+                            onChange(profile);
+                            setJobProfileQuery(profile);
+                            setShowJobProfileDropdown(false);
+                          }}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-inter text-sm"
+                        >
+                          {profile}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-gray-500 font-inter text-sm">
+                        No job profiles found. Please select from available
+                        options.
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </>

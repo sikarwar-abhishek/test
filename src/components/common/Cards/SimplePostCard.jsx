@@ -23,12 +23,11 @@ function SimplePostCard({
         />
       </div>
       <div className="flex-1 min-w-0 font-poppins">
-        <p className="text-foreground">
+        <p className="text-foreground flex flex-col gap-2">
           {authorName && (
             <>
-              <span className="font-semibold">{authorName}</span> added a new
-              post
-              {postTitle && `: "${postTitle}"`}.
+              <span className="font-semibold">{authorName}</span>
+              {postTitle && <span>{postTitle}</span>}
             </>
           )}
           {!authorName && postTitle && <>New post: &quot;{postTitle}&quot;</>}

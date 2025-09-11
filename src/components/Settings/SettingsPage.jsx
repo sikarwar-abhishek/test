@@ -3,13 +3,12 @@
 import Image from "next/image";
 import HomePageHeader from "../common/HomePageHeader";
 import Icon from "../common/Icon";
-import { ArrowRight, Router } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import LogOutPopup from "./LogOutPopup";
 import EditProfile from "./EditProfile";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useLocalStorageState } from "@/src/hooks/useLocalStorageState";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getUserProfile } from "@/src/api/auth";
 
@@ -54,7 +53,8 @@ function SettingsPage() {
   const handleOptionClick = (optionId) => {
     if (optionId === 1) {
       // Edit Profile
-      setShowEditProfile(true);
+      // setShowEditProfile(true);
+      router.push("/myprofile/edit");
     } else if (optionId === 5) {
       // Log Out
       setShowLogoutPopup(true);

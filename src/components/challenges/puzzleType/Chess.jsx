@@ -6,10 +6,10 @@ import { getChallengesList } from "@/src/api/challenges";
 import Instructions from "./Instructions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import PlayGridChallenge from "./PlayGridChallenge";
+import PlayChessChallenge from "./PlayChessChallenge";
 
-export default function Grid({ challengeId, puzzleId }) {
-  const router = useRouter();
+function Chess({ challengeId, puzzleId }) {
+//   const router = useRouter();
   const [play, setPlay] = useState(false);
   const {
     data: challengesList,
@@ -26,7 +26,7 @@ export default function Grid({ challengeId, puzzleId }) {
 
   if (isLoading) return <p>Loading..</p>;
   if (error) return <p> Error</p>;
-  console.log(currentPuzzle);
+
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
@@ -34,7 +34,7 @@ export default function Grid({ challengeId, puzzleId }) {
         {!play ? (
           <Instructions setPlay={setPlay} currentPuzzle={currentPuzzle} />
         ) : (
-          <PlayGridChallenge
+          <PlayChessChallenge
             challengeId={challengeId}
             currentPuzzle={currentPuzzle}
           />
@@ -43,3 +43,5 @@ export default function Grid({ challengeId, puzzleId }) {
     </div>
   );
 }
+
+export default Chess;

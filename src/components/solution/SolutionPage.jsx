@@ -9,7 +9,8 @@ import { useEffect } from "react";
 import Spinner from "../common/Spinner";
 import { useRouter } from "next/navigation";
 
-function SolutionPage() {
+function SolutionPage({ challengeId }) {
+  console.log(challengeId);
   const router = useRouter();
   const {
     data,
@@ -19,8 +20,8 @@ function SolutionPage() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["pastChallenges"],
-    queryFn: ({ pageParam = 1 }) => getPastChallenges(pageParam),
+    queryKey: ["pastChallenges", challengeId],
+    queryFn: ({ pageParam = 1 }) => getPastChallenges(challengeId, pageParam),
     getNextPageParam: (lastPage) => {
       const nextPageUrl = lastPage?.next;
       if (!nextPageUrl) return undefined;
@@ -46,9 +47,7 @@ function SolutionPage() {
 
   const handleChallengeClick = (challengeId, date) => {
     console.log(`Viewing solution for challenge ${challengeId}`);
-    router.push(
-      `/solution/previous/view?challengeId=${challengeId}&date=${date}`
-    );
+    router.push(`/solution/${challengeId}/previous/view?date=${date}`);
   };
 
   if (isLoading) return <Spinner />;

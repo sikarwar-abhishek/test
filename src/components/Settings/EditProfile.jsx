@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import Form from "../common/Form";
@@ -14,6 +14,7 @@ import { getAllTrainingGoals } from "@/src/api/practice";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import { AVAILABLE_JOBPROFILES, LOCATIONS } from "@/src/constants/constant";
+import Link from "next/link";
 
 const cities = LOCATIONS;
 
@@ -66,6 +67,14 @@ function EditProfile({ onBack }) {
   const { register, control, handleSubmit, formState, setValue, watch } = form;
   const { errors } = formState;
 
+  // Initialize query states when data loads
+  useEffect(() => {
+    if (data) {
+      setLocationQuery(data.location || "");
+      setJobProfileQuery(data.job_profile || "");
+    }
+  }, [data]);
+
   // Prepare options for goals dropdown
   const goalOptions =
     goals?.map((goal) => ({ value: goal.id, label: goal.name })) || [];
@@ -75,6 +84,7 @@ function EditProfile({ onBack }) {
     cities?.filter((city) =>
       city.toLowerCase().includes(locationQuery.toLowerCase())
     ) || [];
+
   const filteredJobProfiles =
     AVAILABLE_JOBPROFILES?.filter((profile) =>
       profile.toLowerCase().includes(jobProfileQuery.toLowerCase())
@@ -189,51 +199,72 @@ function EditProfile({ onBack }) {
                 control={control}
                 rules={{
                   required: "Please specify location!",
+                  validate: (value) => {
+                    if (!value) return "Please specify location!";
+                    if (!cities.includes(value)) {
+                      return "Please select a valid location from the list";
+                    }
+                    return true;
+                  },
                 }}
-                render={({ field: { onChange, value, name } }) => (
-                  <>
-                    <input
-                      id={name}
-                      type="text"
-                      placeholder="Location"
-                      disabled={isUpdating}
-                      value={locationQuery || value}
-                      onChange={(e) => {
-                        const inputValue = e.target.value;
-                        setLocationQuery(inputValue);
-                        onChange(inputValue);
-                        setShowLocationDropdown(inputValue.length > 0);
-                      }}
-                      onFocus={() =>
-                        locationQuery.length > 0 &&
-                        setShowLocationDropdown(true)
-                      }
-                      onBlur={() =>
-                        setTimeout(() => setShowLocationDropdown(false), 200)
-                      }
-                      className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    {showLocationDropdown &&
-                      filteredCities.length > 0 &&
-                      !isUpdating && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredCities.map((city) => (
-                            <div
-                              key={city}
-                              onClick={() => {
-                                onChange(city);
-                                setLocationQuery(city);
-                                setShowLocationDropdown(false);
-                              }}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-poppins text-sm"
-                            >
-                              {city}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </>
-                )}
+                render={({ field: { onChange, value, name } }) => {
+                  const displayValue =
+                    locationQuery !== "" ? locationQuery : value || "";
+
+                  return (
+                    <>
+                      <input
+                        id={name}
+                        type="text"
+                        placeholder="Location"
+                        disabled={isUpdating}
+                        value={displayValue}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+                          setLocationQuery(inputValue);
+                          if (
+                            inputValue === "" ||
+                            cities.includes(inputValue)
+                          ) {
+                            onChange(inputValue);
+                          }
+                          setShowLocationDropdown(inputValue.length > 0);
+                        }}
+                        onFocus={() => {
+                          const currentValue =
+                            locationQuery !== "" ? locationQuery : value || "";
+                          if (currentValue.length > 0) {
+                            setShowLocationDropdown(true);
+                          }
+                        }}
+                        onBlur={() => {
+                          setLocationQuery("");
+                          setShowLocationDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {showLocationDropdown &&
+                        filteredCities.length > 0 &&
+                        !isUpdating && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                            {filteredCities.map((city) => (
+                              <div
+                                key={city}
+                                onMouseDown={() => {
+                                  onChange(city);
+                                  setLocationQuery(city);
+                                  setShowLocationDropdown(false);
+                                }}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-poppins text-sm"
+                              >
+                                {city}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                    </>
+                  );
+                }}
               />
             </div>
           </FormRow>
@@ -246,50 +277,75 @@ function EditProfile({ onBack }) {
               <Controller
                 name="job_profile"
                 control={control}
-                render={({ field: { onChange, value, name } }) => (
-                  <>
-                    <input
-                      id={name}
-                      type="text"
-                      placeholder="Job profile"
-                      disabled={isUpdating}
-                      value={jobProfileQuery || value}
-                      onChange={(e) => {
-                        const inputValue = e.target.value;
-                        setJobProfileQuery(inputValue);
-                        onChange(inputValue);
-                        setShowJobProfileDropdown(inputValue.length > 0);
-                      }}
-                      onFocus={() =>
-                        jobProfileQuery.length > 0 &&
-                        setShowJobProfileDropdown(true)
-                      }
-                      onBlur={() =>
-                        setTimeout(() => setShowJobProfileDropdown(false), 200)
-                      }
-                      className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    {showJobProfileDropdown &&
-                      filteredJobProfiles.length > 0 &&
-                      !isUpdating && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredJobProfiles.slice(0, 10).map((profile) => (
-                            <div
-                              key={profile}
-                              onClick={() => {
-                                onChange(profile);
-                                setJobProfileQuery(profile);
-                                setShowJobProfileDropdown(false);
-                              }}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-poppins text-sm"
-                            >
-                              {profile}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </>
-                )}
+                rules={{
+                  validate: (value) => {
+                    if (value && !AVAILABLE_JOBPROFILES.includes(value)) {
+                      return "Please select a valid job profile from the list";
+                    }
+                    return true;
+                  },
+                }}
+                render={({ field: { onChange, value, name } }) => {
+                  const displayValue =
+                    jobProfileQuery !== "" ? jobProfileQuery : value || "";
+
+                  return (
+                    <>
+                      <input
+                        id={name}
+                        type="text"
+                        placeholder="Job profile"
+                        disabled={isUpdating}
+                        value={displayValue}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+                          setJobProfileQuery(inputValue);
+                          // Only update form value if it's a valid job profile or empty
+                          if (
+                            inputValue === "" ||
+                            AVAILABLE_JOBPROFILES.includes(inputValue)
+                          ) {
+                            onChange(inputValue);
+                          }
+                          setShowJobProfileDropdown(inputValue.length > 0);
+                        }}
+                        onFocus={() => {
+                          const currentValue =
+                            jobProfileQuery !== ""
+                              ? jobProfileQuery
+                              : value || "";
+                          if (currentValue.length > 0) {
+                            setShowJobProfileDropdown(true);
+                          }
+                        }}
+                        onBlur={() => {
+                          setJobProfileQuery("");
+                          setShowJobProfileDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {showJobProfileDropdown &&
+                        filteredJobProfiles.length > 0 &&
+                        !isUpdating && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                            {filteredJobProfiles.map((profile) => (
+                              <div
+                                key={profile}
+                                onMouseDown={() => {
+                                  onChange(profile);
+                                  setJobProfileQuery(profile);
+                                  setShowJobProfileDropdown(false);
+                                }}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-poppins text-sm"
+                              >
+                                {profile}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                    </>
+                  );
+                }}
               />
             </div>
           </FormRow>
@@ -298,7 +354,7 @@ function EditProfile({ onBack }) {
             <Controller
               name="goals"
               control={control}
-              render={({ field: { onChange, value, name } }) => (
+              render={({ field: { onChange, value } }) => (
                 <div className="relative">
                   <MultiSelectDropdown
                     id="goals"
@@ -317,13 +373,14 @@ function EditProfile({ onBack }) {
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
-          <button
+          <Link
+            href={"/myprofile"}
             type="button"
-            onClick={handleBack}
+            // onClick={handleBack}
             className="w-full sm:w-auto px-8 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors font-poppins font-medium"
           >
             Back
-          </button>
+          </Link>
           <button
             type="submit"
             disabled={isUpdating}

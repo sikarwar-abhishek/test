@@ -10,9 +10,6 @@ function TrialGames() {
             Guests get one free puzzle. Sign up to unlock all.
           </h3>
         </div>
-        <button className="border-2 border-white text-white px-6 py-2 font-medium font-nunito rounded-lg transition-all duration-300 ease-in-out hover:shadow-[0_0_15px_rgba(255,255,255,0.8)] hover:text-blue-500 hover:bg-white">
-          Sign up
-        </button>
       </div>
       {/* trialgames */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12 mt-20">

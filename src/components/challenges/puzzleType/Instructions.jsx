@@ -1,12 +1,26 @@
 import { Star } from "lucide-react";
+import Markdown from "react-markdown";
 
 export default function Instructions({ currentPuzzle, setPlay, onBack }) {
   console.log(currentPuzzle);
-  const { instruction, difficultyLevel } = currentPuzzle;
+  const { instruction, difficultyLevel, is_submitted } = currentPuzzle;
+  const processEscapeSequences = (text) => {
+    return text
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\r/g, "\r")
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      .replace(/\\\\/g, "\\")
+      .replace(/^"/, "")
+      .replace(/"$/, "");
+  };
+
+  const processedInstructions = processEscapeSequences(instruction);
   const maxStars = 5;
   return (
     <>
-      <div className="border border-[#000000] max-w-5xl mx-auto rounded-xl p-6 border-opacity-[0.12]">
+      <div className="border border-[#000000] max-w-5xl mx-auto rounded-xl p-6 border-opacity-[0.12] max-h-[70dvh] overflow-auto no-scrollbar">
         <div className="text-center space-y-4">
           {/* Difficulty Level Number */}
           <div className="text-4xl font-semibold font-poppins text-blue-500">
@@ -41,7 +55,7 @@ export default function Instructions({ currentPuzzle, setPlay, onBack }) {
                 INSTRUCTIONS
               </h3>
               <div className="space-y-4 text-[#757575] text-sm font-opensans">
-                {instruction}
+                <Markdown>{processedInstructions}</Markdown>
               </div>
             </div>
 
@@ -67,14 +81,20 @@ export default function Instructions({ currentPuzzle, setPlay, onBack }) {
 
       {/* Action Buttons */}
       <div className="flex justify-center items-center">
-        <button
-          onClick={() => setPlay(true)}
-          className="py-2 px-16 sm:py-2 sm:px-32 rounded-lg gap-2 sm:gap-4 border border-transparent bg-blue-500 text-white font-poppins font-bold flex items-center justify-center text-lg
-            transition-all duration-300 ease-in-out
-            hover:-translate-y-1 hover:border-blue-400 hover:shadow-md hover:shadow-blue-400/40"
-        >
-          Play
-        </button>
+        {is_submitted ? (
+          <div className="py-2 px-16 sm:py-2 sm:px-32 rounded-lg gap-2 sm:gap-4 border border-gray-300 bg-gray-100 text-gray-500 font-poppins font-bold flex items-center justify-center text-lg cursor-not-allowed">
+            Already Submitted
+          </div>
+        ) : (
+          <button
+            onClick={() => setPlay(true)}
+            className="py-2 px-16 sm:py-2 sm:px-32 rounded-lg gap-2 sm:gap-4 border border-transparent bg-blue-500 text-white font-poppins font-bold flex items-center justify-center text-lg
+              transition-all duration-300 ease-in-out
+              hover:-translate-y-1 hover:border-blue-400 hover:shadow-md hover:shadow-blue-400/40"
+          >
+            Play
+          </button>
+        )}
       </div>
     </>
   );

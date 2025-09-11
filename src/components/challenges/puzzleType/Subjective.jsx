@@ -4,10 +4,12 @@ import useQueryHandler from "@/src/hooks/useQueryHandler";
 import HomePageHeader from "../../common/HomePageHeader";
 import { getChallengesList } from "@/src/api/challenges";
 import Instructions from "./Instructions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import PlaySubjectiveChallenge from "./PlaySubjectiveChallenge";
 
 function Subjective({ challengeId, puzzleId }) {
+  const router = useRouter();
   const [play, setPlay] = useState(false);
   const {
     data: challengesList,
@@ -18,11 +20,12 @@ function Subjective({ challengeId, puzzleId }) {
     query: challengeId,
   });
 
-  if (isLoading) return <p>Loading..</p>;
-  if (error) return <p> Error</p>;
   const [currentPuzzle] = challengesList.puzzles.filter(
     (puzzle) => puzzle.puzzleId === puzzleId
   );
+
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p> Error</p>;
 
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">

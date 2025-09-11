@@ -79,7 +79,7 @@ function CurrentWeekLeaderboard({ challengeId }) {
     query: challengeId,
   });
   if (isLoading) return null;
-
+  if (error) return <p>No leaderboard found</p>;
   const { user_best_score: currentUser, results, date } = leaderboard;
   const hasValidResults =
     results &&

@@ -26,7 +26,7 @@ function Header() {
             href={item.href}
             className={`font-nunito text-lg
               ${
-                item.name === "Sign up"
+                item.name === "Login"
                   ? "border-2 border-blue-600 rounded-lg px-6 py-2 text-blue-600 hover:bg-accent font-semibold"
                   : "font-normal hover:text-gray-500 transition-colors duration-300"
               }

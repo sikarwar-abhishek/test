@@ -1,7 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import Icon from "../common/Icon";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function GameChallengeCard({ imageSrc, disabled, children }) {
+  const router = useRouter();
+  const cookies = Cookies.get("authToken");
+
   return (
     <div className="flex shadow-2xl drop-shadow-2xl flex-col relative z-20 rounded-2xl bg-white">
       <div className="relative z-20 aspect-video min-h-[180px] rounded-2xl bg-white">
@@ -20,6 +28,10 @@ function GameChallengeCard({ imageSrc, disabled, children }) {
         </p>
         <button
           disabled={disabled}
+          onClick={() => {
+            if (cookies) router.push("/challenges");
+            else router.push("/login");
+          }}
           className={`
             border-2 flex justify-center items-center gap-2 py-2 text-lg font-semibold rounded-xl
             transition-all duration-300 ease-in-out

@@ -3,7 +3,15 @@
 import { ArrowLeft, Bell, Search } from "lucide-react";
 import { Input } from "../common/ui/input";
 import { useRouter } from "next/navigation";
-function HomePageHeader({ text, backBtn = false, search = false, onBack }) {
+function HomePageHeader({
+  text,
+  backBtn = false,
+  search = false,
+  onBack,
+  searchValue = "",
+  onSearchChange,
+  searchPlaceholder = "Search",
+}) {
   const router = useRouter();
 
   const handleBackClick = () => {
@@ -33,11 +41,13 @@ function HomePageHeader({ text, backBtn = false, search = false, onBack }) {
 
       {search && (
         <div className="flex items-center gap-4">
-          <div className="relative hidden sm:block">
+          <div className="relative block">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search"
-              className="pl-10 w-80 placeholder:text-gray-400 font-nunito placeholder:text-sm bg-muted/50 border-border rounded-3xl"
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="pl-10 w-full sm:w-80 placeholder:text-gray-400 font-nunito placeholder:text-sm bg-muted/50 border-border rounded-3xl"
             />
           </div>
         </div>

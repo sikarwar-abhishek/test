@@ -1,7 +1,7 @@
-import PracticeChallenges from "@/src/components/practice/PracticeChallenges";
+import PracticePuzzleFlow from "@/src/components/practice/PracticePuzzleFlow";
 
 function page() {
-  return <PracticeChallenges />;
+  return <PracticePuzzleFlow />;
 }
 
 export default page;

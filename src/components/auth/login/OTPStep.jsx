@@ -9,16 +9,23 @@ import {
 } from "@/src/components/common/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
-import { verifyOtp } from "@/src/api/auth";
+import { sendOtp, verifyOtp } from "@/src/api/auth";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
 export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
   const router = useRouter();
-  const [resendTimer, setResendTimer] = useState(2);
+  const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const otpRef = useRef(null);
 
+  const {
+    data,
+    mutate: send,
+    isPending: sendingOtp,
+  } = useMutationHandler(sendOtp, {
+    onSuccess: async (response) => {},
+  });
   const { mutate: verifyOtpMutation, isPending: isOtpVerifying } =
     useMutationHandler(verifyOtp, {
       apiTitle: "Login",
@@ -72,8 +79,10 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
   const handleResendOtp = () => {
     if (!canResend) return;
     setCanResend(false);
-    setResendTimer(2);
+    setResendTimer(60);
     setOtp("");
+    send({ email });
+
     // Add resend logic here
     console.log("Resending OTP...");
   };
@@ -99,7 +108,7 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
         </h1>
         <div className="font-poppins text-xs space-y-1">
           <p>
-            A 6 digit OTP has been sent to your email address{" "}
+            A 5 digit OTP has been sent to your email address{" "}
             <span className="font-medium">{email}</span>
           </p>
           <p>
@@ -167,14 +176,14 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
               : "text-gray-400 cursor-not-allowed"
           }`}
         >
-          {"Resend OTP?"}
+          {"Resend OTP?"} {!canResend > 0 && `${resendTimer} s`}
         </button>
       </div>
 
       {/* Verify Button */}
       <motion.button
         onClick={handleVerify}
-        disabled={!isOtpComplete || isOtpVerifying}
+        disabled={!isOtpComplete || isOtpVerifying || sendingOtp}
         className={`w-full py-3 rounded-lg font-bold text-white transition-all duration-300 ${
           isOtpComplete && !isOtpVerifying
             ? "bg-[#4676FA] hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-lg"

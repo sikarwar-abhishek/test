@@ -7,8 +7,8 @@ import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { pastChallengesDetails } from "@/src/api/challenges";
 import Spinner from "../common/Spinner";
 import PuzzleSolutionViewer from "./PuzzleSolutionViewer";
+import GridSolutionViewer from "./GridSolutionViewer";
 
-// Add custom animation styles
 const customStyles = `
   @keyframes fadeIn {
     from {
@@ -63,8 +63,9 @@ function ViewPastPuzzles({ challengeId, date }) {
   });
 
   const handlePuzzleClick = (puzzle) => {
-    // Only handle subjective puzzles for now
-    if (puzzle.type?.toLowerCase() === "subjective") {
+    // Handle subjective and grid puzzles
+    const puzzleType = puzzle.type?.toLowerCase();
+    if (puzzleType === "subjective" || puzzleType === "grid") {
       setSelectedPuzzle(puzzle);
     }
   };
@@ -74,7 +75,6 @@ function ViewPastPuzzles({ challengeId, date }) {
   };
 
   if (isLoading) return <Spinner />;
-
   if (error) {
     return (
       <div className="flex flex-1 max-h-screen overflow-auto">
@@ -82,7 +82,7 @@ function ViewPastPuzzles({ challengeId, date }) {
           <HomePageHeader backBtn text={"Puzzles"} />
           <div className="flex items-center justify-center flex-1 py-20">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
-              Error loading challenge data
+              No puzzles available
             </h2>
           </div>
         </div>
@@ -92,11 +92,29 @@ function ViewPastPuzzles({ challengeId, date }) {
 
   const puzzles = challengeData?.puzzles || [];
 
-  // If a puzzle is selected, show the solution viewer
+  // If a puzzle is selected, show the appropriate solution viewer
   if (selectedPuzzle) {
-    return (
-      <PuzzleSolutionViewer puzzle={selectedPuzzle} onBack={handleBackToList} />
-    );
+    const puzzleType = selectedPuzzle.type?.toLowerCase();
+
+    if (puzzleType === "grid") {
+      return (
+        <GridSolutionViewer
+          puzzle={selectedPuzzle}
+          onBack={handleBackToList}
+          challengeId={challengeId}
+          date={date}
+        />
+      );
+    } else {
+      return (
+        <PuzzleSolutionViewer
+          puzzle={selectedPuzzle}
+          onBack={handleBackToList}
+          challengeId={challengeId}
+          date={date}
+        />
+      );
+    }
   }
 
   if (!puzzles || puzzles.length === 0) {
@@ -136,15 +154,15 @@ function ViewPastPuzzles({ challengeId, date }) {
                       {/* Progress Icon - aligned with puzzle card height */}
                       <div className="flex items-center h-16">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ease-in-out transform ${
+                          className={`w-10 h-10 rounded-full flex items-center justify-center  transform ${
                             puzzle.is_submitted
-                              ? "bg-green-500 text-white scale-110 animate-pulse"
+                              ? "bg-green-500 text-white scale-110"
                               : "bg-blue-500 text-white hover:scale-105"
                           }`}
                         >
-                          <div className="transition-all duration-300 ease-in-out">
+                          <div className="">
                             {puzzle.is_submitted ? (
-                              <Check className="w-4 h-4 animate-bounce" />
+                              <Check className="w-4 h-4" />
                             ) : (
                               <Play className="w-4 h-4 fill-white transition-transform duration-200 hover:scale-110" />
                             )}
@@ -166,7 +184,8 @@ function ViewPastPuzzles({ challengeId, date }) {
                     <div
                       key={puzzle.puzzleId || index}
                       className={`rounded-2xl p-4 flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transition-all duration-300 ease-in-out transform ${
-                        puzzle.type?.toLowerCase() === "subjective"
+                        puzzle.type?.toLowerCase() === "subjective" ||
+                        puzzle.type?.toLowerCase() === "grid"
                           ? "cursor-pointer hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 hover:shadow-blue-500/30"
                           : "cursor-not-allowed opacity-75"
                       } ${puzzle.is_submitted ? "animate-statusChange" : ""}`}

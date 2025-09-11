@@ -3,75 +3,10 @@ import { Check, Filter } from "lucide-react";
 import HomePageHeader from "../common/HomePageHeader";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getChallenges } from "@/src/api/challenges";
-// const challenges = [
-//   {
-//     id: 1,
-//     title: "Daily Challenge",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 2,
-//     title: "Challenge_1",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 3,
-//     title: "Challenge_2",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 4,
-//     title: "Challenge_3",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 5,
-//     title: "Challenge_4",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 6,
-//     title: "Challenge_5",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 7,
-//     title: "Challenge_5",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 8,
-//     title: "Challenge_5",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-//   {
-//     id: 9,
-//     title: "Challenge_5",
-//     description:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
-//     imageSrc: "/asset/mug.jpg",
-//   },
-// ];
 
 function FilterComponent({ onFilterChange }) {
   const [selectedFilters, setSelectedFilters] = useState(["All"]);
@@ -223,6 +158,8 @@ function ChallengeCard({
 
 function ChallengesPage() {
   const [activeFilters, setActiveFilters] = useState(["All"]);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const {
     data: challenges,
     isLoading,
@@ -231,8 +168,6 @@ function ChallengesPage() {
     queryKey: ["challenges"],
   });
 
-  if (isLoading) return <p>Loading..</p>;
-  if (error) return <p> Error</p>;
   const handleStartChallenge = (challengeId) => {
     console.log(`Starting challenge ${challengeId}`);
   };
@@ -241,28 +176,80 @@ function ChallengesPage() {
     setActiveFilters(filters);
   };
 
-  const filteredChallenges = activeFilters.includes("All")
-    ? challenges
-    : challenges.filter((challenge) =>
-        activeFilters.includes(challenge.category)
+  // Handle search input change
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+  };
+
+  // Local search and filter logic
+  const displayChallenges = useMemo(() => {
+    if (!challenges) return [];
+
+    let filteredChallenges = challenges;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredChallenges = challenges.filter(
+        (challenge) =>
+          challenge.name.toLowerCase().includes(query) ||
+          challenge.description.toLowerCase().includes(query) ||
+          (challenge.type && challenge.type.toLowerCase().includes(query))
       );
+    }
+
+    // Apply category/type filters
+    if (!activeFilters.includes("All")) {
+      filteredChallenges = filteredChallenges.filter(
+        (challenge) =>
+          activeFilters.includes(challenge.type) ||
+          activeFilters.includes(challenge.category)
+      );
+    }
+
+    return filteredChallenges;
+  }, [challenges, searchQuery, activeFilters]);
+
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p>No challenge found</p>;
+
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
-        <HomePageHeader text={"Challenges"} search />
+        <HomePageHeader
+          text={"Challenges"}
+          search
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          searchPlaceholder="Search challenges..."
+        />
+
         <div className="flex gap-8 overflow-auto no-scrollbar">
           <div className="flex-1">
+            {/* Challenges Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredChallenges.map((challenge) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  title={challenge.name}
-                  description={challenge.description}
-                  challengeId={challenge.id}
-                  imageSrc={challenge.image || undefined}
-                  onStartChallenge={() => handleStartChallenge(challenge.id)}
-                />
-              ))}
+              {displayChallenges.length > 0
+                ? displayChallenges.map((challenge) => (
+                    <ChallengeCard
+                      key={challenge.id}
+                      title={challenge.name}
+                      description={challenge.description}
+                      challengeId={challenge.id}
+                      imageSrc={challenge.image || undefined}
+                      onStartChallenge={() =>
+                        handleStartChallenge(challenge.id)
+                      }
+                    />
+                  ))
+                : !isLoading && (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500 font-poppins text-lg">
+                        {searchQuery.trim()
+                          ? "No matching challenges found"
+                          : "No challenges available."}
+                      </p>
+                    </div>
+                  )}
             </div>
           </div>
           {/* <div className="max-w-80 min-w-64 sticky top-0 hidden lg:block">

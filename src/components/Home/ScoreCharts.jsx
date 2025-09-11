@@ -79,7 +79,7 @@ export function ProficiencyGraph({ data, dataKey }) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 5, right: 20, left: -30, bottom: 10 }}
+            margin={{ top: 5, right: 20, left: -20, bottom: 10 }}
             className="text-sm"
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -138,7 +138,7 @@ export default function ScoreCharts({ bestPuzzleType, tooltips, charts }) {
               <p className="text-sm text-gray-600  -mt-4 mb-3">
                 {"Best Proficiency in Puzzle type : "}
                 <span className="font-semibold font-sans text-blue-500">
-                  {bestPuzzleType}
+                  {bestPuzzleType || "N/A"}
                 </span>
               </p>
               <ProficiencyGraph

@@ -12,6 +12,16 @@ const API_ENDPOINTS = {
   past_challenges: "/api/past-challenges/landing/",
   leaderboard: "/api/leaderboard/",
   subjective_submit: "/api/subjective/",
+  grid_submit: "/api/grid/",
+  chess_submit: "/api/chess/",
+  training_subjective_submit: "/api/subjective/",
+  training_grid_submit: "/api/grid/",
+  feedback: "/api/feedback/",
+  home_recommendations: "/api/home/activity-feed/",
+  lounge_posts: "/api/lounge-posts/",
+  post_create: "/api/lounge-posts/create/",
+  all_comments: "/api/comments/",
+  search_challenges: "/api/challenges/search/",
 };
 
 // export const HOME_PROGRESS = {
@@ -447,10 +457,6 @@ const HEADER_NAV = [
   {
     name: "Login",
     href: "/login",
-  },
-  {
-    name: "Sign up",
-    href: "/register",
   },
 ];
 

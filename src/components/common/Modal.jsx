@@ -7,7 +7,7 @@ import {
 } from "@/src/components/common/ui/dialog";
 import { Button } from "@/src/components/common/ui/button";
 import Image from "next/image";
-console.log('ok')
+
 export function Modal({ isOpen, onClose, onSubmit }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

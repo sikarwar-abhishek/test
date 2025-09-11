@@ -1,82 +1,103 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { Clock, ThumbsUp, MessageCircle, ArrowRight } from "lucide-react";
+import { Clock, MessageCircle, ArrowRight, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import HomePageHeader from "../common/HomePageHeader";
 import Link from "next/link";
 import PostModal from "./PostModal";
 import CommentsSection from "./CommentSection";
+import useQueryHandler from "@/src/hooks/useQueryHandler";
+import { getUserProfile } from "@/src/api/auth";
+import { getAllLoungePosts, togglePostLike } from "@/src/api/lounge";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import Icon from "../common/Icon";
+import { formatPostTimestamp } from "@/src/utils/dateUtils";
+import { MdOutlineThumbUp } from "react-icons/md";
+import { RiThumbUpFill } from "react-icons/ri";
+function PostCard({ post, onViewComments, onToggleLike }) {
+  return (
+    <div className="bg-white border-b-4 border-[#DDE6FF] py-6 last:border-none">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative w-10 h-10">
+          <Image
+            src="/asset/avatar.png"
+            alt={post.username}
+            fill
+            className="rounded-full object-cover"
+          />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-medium">{post.username}</h3>
+          <div className="flex gap-2">
+            <div className="flex gap-1 items-center border-r pr-2 border-[#D9D9D9]">
+              <Icon name={"price"} className="w-3 h-3" />
+              <span className="text-xs text-[#4676FA] font-medium font-poppins">
+                {post.user_community_score}
+              </span>
+            </div>
+            <div className="flex gap-1 items-center border-r pr-2 border-[#D9D9D9]">
+              <Icon name={"award"} className="w-3 h-3" />
+              <span className="text-xs text-[#4676FA] font-medium font-poppins">
+                {post.user_proficiency_score}
+              </span>
+            </div>
+            <div className="flex gap-1 items-center">
+              <Icon name={"dumbbell"} className="w-3 h-3" />
+              <span className="text-xs text-[#4676FA] font-medium font-poppins">
+                {post.user_fitness_score}
+              </span>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500">
+            {formatPostTimestamp(post.created_at)}
+          </div>
+        </div>
+      </div>
 
-const stats = [
-  {
-    title: "Community Score",
-    value: 80,
-  },
-  {
-    title: "Fitness Score",
-    value: 85,
-  },
-  {
-    title: "Proficiency Score",
-    value: 85,
-  },
-];
+      <p className="mb-4">{post.description}</p>
 
-const posts = [
-  {
-    id: 1,
-    user: {
-      name: "Lauren Joe",
-      avatar: "/asset/avatar.png",
-    },
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi.",
-    image: "/asset/white-puzzle.jpg",
-    likes: "12K",
-    comments: "24",
-    timestamp: "2 hours ago",
-  },
-  {
-    id: 2,
-    user: {
-      name: "Lauren Joe",
-      avatar: "/asset/avatar.png",
-    },
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi.",
-    image: null,
-    likes: "8.5K",
-    comments: "156",
-    timestamp: "4 hours ago",
-  },
-  {
-    id: 3,
-    user: {
-      name: "John Smith",
-      avatar: "/asset/avatar.png",
-    },
-    content:
-      "Just completed today's puzzle challenge! The pattern recognition was quite tricky but very rewarding once solved.",
-    image: "/asset/puzzle.jpg",
-    likes: "2.1K",
-    comments: "89",
-    timestamp: "6 hours ago",
-  },
-  {
-    id: 4,
-    user: {
-      name: "Sarah Wilson",
-      avatar: "/asset/avatar.png",
-    },
-    content:
-      "Working on improving my logic skills. Any tips for the advanced challenges?",
-    image: null,
-    likes: "945",
-    comments: "67",
-    timestamp: "8 hours ago",
-  },
-];
+      {post.media_type === "image" &&
+        !post.media_url.startsWith("https://your-bucket.s3.amazonaws.com/") && (
+          <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
+            <Image
+              src={post.media_url}
+              alt={`${post.username} post ${post.id}`}
+              fill
+              className="object-contain h-full w-full"
+            />
+          </div>
+        )}
+
+      <div className="flex items-center gap-6 text-gray-500">
+        <button
+          onClick={() => onToggleLike(post.id)}
+          className="flex items-center gap-2 hover:text-blue-500 transition-colors disabled:opacity-50"
+        >
+          {!post.liked_by_me ? (
+            <MdOutlineThumbUp size={20} />
+          ) : (
+            <RiThumbUpFill size={20} className="text-blue-500" />
+          )}
+          <span>{post.likes}</span>
+        </button>
+        <button
+          onClick={() => onViewComments(post.id)}
+          className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+        >
+          <MessageCircle size={20} />
+          <span className="font-poppins">{post.comments_count}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ stat }) {
   return (
     <div className="bg-white rounded-xl p-4 text-center shadow-md drop-shadow-sm">
@@ -94,6 +115,190 @@ function LoungePage() {
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
 
+  const queryClient = useQueryClient();
+  const debounceTimeouts = useRef({});
+
+  // Fetch user profile
+  const { data, isLoading } = useQueryHandler(getUserProfile, {
+    queryKey: ["user_profile"],
+  });
+
+  // Fetch lounge posts with infinite scroll
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+    error: postsError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["lounge_posts"],
+    queryFn: ({ pageParam = 1 }) => getAllLoungePosts(pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        try {
+          const url = lastPage.next.startsWith("http")
+            ? new URL(lastPage.next)
+            : new URL(lastPage.next, window.location.origin);
+          return parseInt(url.searchParams.get("page")) || undefined;
+        } catch (error) {
+          console.error("Error parsing next page URL:", error);
+          return undefined;
+        }
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Track pending like states
+  const pendingLikes = useRef({});
+
+  // Like mutation
+  const likeMutation = useMutation({
+    mutationFn: togglePostLike,
+    onSuccess: (data, postId) => {
+      // Update with final API response
+      queryClient.setQueryData(["lounge_posts"], (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            results: page.results.map((post) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    likes: data.likes_count,
+                    liked_by_me: data.is_liked,
+                  }
+                : post
+            ),
+          })),
+        };
+      });
+
+      // Clear pending state
+      delete pendingLikes.current[postId];
+    },
+    onError: (error, postId) => {
+      console.error("Error toggling like:", error);
+
+      // Revert optimistic update on error
+      queryClient.setQueryData(["lounge_posts"], (oldData) => {
+        if (!oldData) return oldData;
+
+        const pendingState = pendingLikes.current[postId];
+        if (!pendingState) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            results: page.results.map((post) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    likes: pendingState.originalLikes,
+                    liked_by_me: pendingState.originalLikedByMe,
+                  }
+                : post
+            ),
+          })),
+        };
+      });
+
+      // Clear pending state
+      delete pendingLikes.current[postId];
+    },
+  });
+  const allPosts = useMemo(() => {
+    return postsData?.pages?.flatMap((page) => page.results) || [];
+  }, [postsData]);
+  // Immediate like toggle function
+  const handleToggleLike = useCallback(
+    (postId) => {
+      // Clear existing timeout for this post
+      if (debounceTimeouts.current[postId]) {
+        clearTimeout(debounceTimeouts.current[postId]);
+      }
+
+      // Get current post state
+      const currentPost = allPosts.find((post) => post.id === postId);
+      if (!currentPost) return;
+
+      // Store original state if not already pending
+      if (!pendingLikes.current[postId]) {
+        pendingLikes.current[postId] = {
+          originalLikes: currentPost.likes,
+          originalLikedByMe: currentPost.liked_by_me,
+        };
+      }
+
+      // Calculate new state
+      const newLikedByMe = !currentPost.liked_by_me;
+      const newLikes = newLikedByMe
+        ? currentPost.likes + 1
+        : currentPost.likes - 1;
+
+      // Update UI immediately
+      queryClient.setQueryData(["lounge_posts"], (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            results: page.results.map((post) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    likes: newLikes,
+                    liked_by_me: newLikedByMe,
+                  }
+                : post
+            ),
+          })),
+        };
+      });
+
+      // Set debounced API call
+      debounceTimeouts.current[postId] = setTimeout(() => {
+        likeMutation.mutate(postId);
+        delete debounceTimeouts.current[postId];
+      }, 500); // 500ms debounce for better UX
+    },
+    [likeMutation, allPosts, queryClient]
+  );
+
+  // Cleanup timeouts on unmount
+  useCallback(() => {
+    return () => {
+      Object.values(debounceTimeouts.current).forEach(clearTimeout);
+    };
+  }, []);
+
+  // Flatten all pages into a single array
+
+  if (isLoading || postsLoading) return <p>Loading..</p>;
+  const value = data?.data;
+  const { proficiency_score, community_score, fitness_score } = value;
+  const stats = [
+    {
+      title: "Proficiency Score",
+      value: proficiency_score,
+    },
+
+    {
+      title: "Fitness Score",
+      value: fitness_score,
+    },
+    {
+      title: "Community Score",
+      value: community_score,
+    },
+  ];
   const handleInputClick = () => {
     setIsPostModalOpen(true);
   };
@@ -115,52 +320,7 @@ function LoungePage() {
     setShowComments(false);
     setSelectedPostId(null);
   };
-  function PostCard({ post }) {
-    return (
-      <div className="bg-white border-b-4 border-[#DDE6FF] py-6 last:border-none">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative w-10 h-10">
-            <Image
-              src={post.user.avatar}
-              alt={post.user.name}
-              fill
-              className="rounded-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 className="font-medium">{post.user.name}</h3>
-          </div>
-        </div>
 
-        <p className="mb-4">{post.content}</p>
-
-        {post.image && (
-          <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
-            <Image
-              src={post.image}
-              alt={`${post.user.name} post ${post.id}`}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
-
-        <div className="flex items-center gap-6 text-gray-500">
-          <button className="flex items-center gap-2 hover:text-blue-500">
-            <ThumbsUp size={20} />
-            <span>{post.likes}</span>
-          </button>
-          <button
-            onClick={() => handleViewComments(post.id)}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-          >
-            <MessageCircle size={20} />
-            <span className="font-poppins">{post.comments}</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-8 bg-background">
@@ -168,7 +328,17 @@ function LoungePage() {
 
         <div className="flex gap-8 mt-6 overflow-auto no-scrollbar">
           {/* Main Content Area */}
-          <div className="flex-1 space-y-6">
+          <motion.div
+            className="flex-1 space-y-6 overflow-auto no-scrollbar"
+            animate={{
+              width: showComments ? "70%" : "100%",
+              marginRight: showComments ? "1rem" : "0",
+            }}
+            transition={{
+              duration: 0.4,
+              ease: [0.4, 0.0, 0.2, 1],
+            }}
+          >
             {/* User Profile Section */}
             <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6 font-poppins">
@@ -176,14 +346,14 @@ function LoungePage() {
                   <div className="relative w-16 h-16">
                     <Image
                       src="/asset/avatar.png"
-                      alt="John Doe"
+                      alt={value?.first_name}
                       fill
                       className="rounded-full object-cover"
                     />
                   </div>
                   <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold text-gray-800">
-                      John Doe
+                      {value?.first_name} {value?.last_name}
                     </h2>
                   </div>
                 </div>
@@ -228,20 +398,122 @@ function LoungePage() {
 
             {/* Feed Posts */}
             <div className="font-poppins">
-              {posts.map((post, index) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
-          </div>
+              {postsLoading && allPosts.length === 0 ? (
+                // Loading skeleton
+                <div className="space-y-6">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-white border-b-4 border-[#DDE6FF] py-6 animate-pulse"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
+                          <div className="h-3 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      </div>
+                      <div className="space-y-2 mb-4">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                      <div className="flex gap-6">
+                        <div className="h-4 bg-gray-200 rounded w-16"></div>
+                        <div className="h-4 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : postsError ? (
+                // Error state
+                <div className="text-center py-8">
+                  <p className="text-red-500 mb-4">Failed to load posts</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : allPosts.length > 0 ? (
+                // Render posts
+                <>
+                  {allPosts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      onViewComments={handleViewComments}
+                      onToggleLike={handleToggleLike}
+                    />
+                  ))}
 
-          {/* Sidebar */}
-          {showComments ? (
-            <CommentsSection
-              postId={selectedPostId}
-              onBack={handleBackToSidebar}
-            />
-          ) : (
-            /* Original Sidebar */
+                  {/* Load More Button */}
+                  {hasNextPage && (
+                    <div className="flex justify-center py-6">
+                      <button
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                        className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-poppins"
+                      >
+                        {isFetchingNextPage ? "Loading..." : "Load More Posts"}
+                        <ChevronDown
+                          className={isFetchingNextPage ? "animate-spin" : ""}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // Empty state
+                <div className="text-center py-8 text-gray-500">
+                  <p>No posts available at the moment.</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Comments Section - appears on the right when a comment button is clicked */}
+          <AnimatePresence mode="wait">
+            {showComments && (
+              <motion.div
+                className="flex-shrink-0"
+                initial={{
+                  x: "100%",
+                  opacity: 0,
+                  width: 0,
+                }}
+                animate={{
+                  x: 0,
+                  opacity: 1,
+                  width: "33%",
+                }}
+                exit={{
+                  x: "100%",
+                  opacity: 0,
+                  width: 0,
+                }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.4, 0.0, 0.2, 1],
+                }}
+              >
+                <motion.div
+                  initial={{ scale: 0.95 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: 0.1 }}
+                >
+                  <CommentsSection
+                    postId={selectedPostId}
+                    onBack={handleBackToSidebar}
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Original Sidebar - Only show when comments are not open */}
+          {!showComments && (
             <div className="w-96 space-y-6 font-poppins">
               {/* What's New Section */}
               <div className="bg-white rounded-xl p-4 shadow-sm border space-y-4">
@@ -318,6 +590,7 @@ function LoungePage() {
         </div>
       </div>
       <PostModal
+        user={value}
         isOpen={isPostModalOpen}
         onClose={() => setIsPostModalOpen(false)}
         onSubmit={handlePostSubmit}
