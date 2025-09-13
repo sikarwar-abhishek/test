@@ -41,11 +41,9 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
       let mediaUrl = null;
       let mediaType = null;
 
-      // If there's a selected file, upload it first
       if (selectedFile) {
         setIsUploading(true);
 
-        // Get file extension and content type
         const fileExtension = selectedFile.name.split(".").pop().toLowerCase();
         const contentType = selectedFile.type;
 
@@ -55,10 +53,8 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
           content_type: contentType,
         });
 
-        // Upload image to S3
         await uploadImageToS3(presignedData.upload_url, selectedFile);
 
-        // Set the media URL and type for the post
         mediaUrl = presignedData.file_url;
         mediaType = "image";
 
@@ -73,9 +69,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
         media_type: mediaType,
       });
 
-      queryClient.invalidateQueries({queryKey: ["my_posts"] });
-
-  
+      queryClient.invalidateQueries({ queryKey: ["my_posts"] });
 
       // Reset form
       setPostContent("");
@@ -85,20 +79,18 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
     } catch (error) {
       setIsUploading(false);
       console.error("Error uploading image:", error);
-      toast.error("Failed to upload image. Please try again.");
+      // toast.error("Failed to upload image. Please try again.");
     }
   };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         toast.error("Please select a valid image file.");
         return;
       }
 
-      // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error("Image size should be less than 10MB.");
         return;
@@ -120,7 +112,6 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
     setUploadedImageUrl(null);
   }, [selectedImage]);
 
-  // Cleanup object URLs when component unmounts or modal closes
   useEffect(() => {
     return () => {
       if (selectedImage) {
@@ -129,7 +120,6 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
     };
   }, [selectedImage]);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setPostContent("");

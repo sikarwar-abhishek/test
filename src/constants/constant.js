@@ -16,12 +16,14 @@ const API_ENDPOINTS = {
   chess_submit: "/api/chess/",
   training_subjective_submit: "/api/subjective/",
   training_grid_submit: "/api/grid/",
+  training_chess_submit: "/api/chess/",
   feedback: "/api/feedback/",
   home_recommendations: "/api/home/activity-feed/",
   lounge_posts: "/api/lounge-posts/",
   post_create: "/api/lounge-posts/create/",
   all_comments: "/api/comments/",
   search_challenges: "/api/challenges/search/",
+  right_section: "/api/home/",
 };
 
 // export const HOME_PROGRESS = {

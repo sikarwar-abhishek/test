@@ -81,7 +81,7 @@ function PracticePage() {
           </div>
 
           <div className="flex gap-2">
-            <Icon name={"clock"} className={"w-6 h-6"} />
+            <Icon name={"puzzle2"} className={"w-6 h-6"} />
             <p className="font-opensans text-[#757575]">
               Puzzles:&nbsp;
               <span className="font-bold text-blue-600">

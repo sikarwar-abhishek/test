@@ -1,33 +1,15 @@
 "use client";
 import { Info, X, Star, Check } from "lucide-react";
-import Icon from "../common/Icon";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { submitPracticeSubjectiveAnswer } from "@/src/api/practice";
-import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function PlayPracticeSubjective({
   currentPuzzle,
   onSubmitSuccess,
 }) {
-  const queryClient = useQueryClient();
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
-
-  // Initialize like state based on existing feedback
-  const initializeLikeState = () => {
-    const feedback =
-      currentPuzzle.feedback || currentPuzzle.puzzleDetail?.feedback;
-    if (feedback === "like") return 1;
-    if (feedback === "unlike") return -1;
-    return 0;
-  };
-
-  const [like, setLike] = useState(initializeLikeState);
   const [answer, setAnswer] = useState("");
-  const debounceTimeoutRef = useRef(null);
-  const lastActionRef = useRef(null);
-
   const [submissionResult, setSubmissionResult] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -54,37 +36,6 @@ export default function PlayPracticeSubjective({
     }
   );
 
-  // Mutation for sending feedback to API
-  const feedbackMutation = useMutationHandler(puzzleFeedback, {
-    onSuccess: (data) => {
-      console.log("Feedback sent successfully:", data);
-      queryClient.invalidateQueries(["practice_puzzles_daily"]);
-    },
-    onError: (error) => {
-      console.error("Error sending feedback:", error);
-    },
-  });
-
-  // Debounced API call function
-  const debouncedFeedbackCall = useCallback(
-    (action) => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-
-      debounceTimeoutRef.current = setTimeout(() => {
-        const feedbackData = {
-          puzzle: currentPuzzle.puzzleId,
-          action: action,
-        };
-
-        console.log("Sending feedback:", feedbackData);
-        feedbackMutation.mutate(feedbackData);
-      }, 1000);
-    },
-    [currentPuzzle.puzzleId, feedbackMutation]
-  );
-
   const handleSubmit = () => {
     if (!answer.trim()) {
       alert("Please enter an answer before submitting.");
@@ -95,12 +46,6 @@ export default function PlayPracticeSubjective({
       answer: answer.trim(),
     };
 
-    console.log(
-      "Submitting to puzzleId:",
-      currentPuzzle.puzzleId,
-      "with data:",
-      answerData
-    );
     submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
   };
 
@@ -111,28 +56,6 @@ export default function PlayPracticeSubjective({
   const handleCloseInstructions = () => {
     setIsInstructionsOpen(false);
   };
-
-  function handleLikeOrDislike(value) {
-    let newLikeValue;
-    let action;
-
-    if (!like) {
-      newLikeValue = value;
-      action = value === 1 ? "like" : "unlike";
-    } else {
-      if (value === like) {
-        newLikeValue = 0;
-        action = "neutral";
-      } else {
-        newLikeValue = value;
-        action = value === 1 ? "like" : "unlike";
-      }
-    }
-
-    setLike(newLikeValue);
-    lastActionRef.current = action;
-    debouncedFeedbackCall(action);
-  }
 
   // Instructions Popup Component
   const InstructionsPopup = () => {
@@ -313,24 +236,6 @@ export default function PlayPracticeSubjective({
           >
             <Info fill="#75757580" stroke="white" className="cursor-pointer" />
           </button>
-          <div className="flex gap-2">
-            <div onClick={() => handleLikeOrDislike(1)}>
-              <Icon
-                name={"like"}
-                className={`w-8 h-8 cursor-pointer ${
-                  like === 1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                }`}
-              />
-            </div>
-            <div onClick={() => handleLikeOrDislike(-1)}>
-              <Icon
-                name={"dislike"}
-                className={`w-8 h-8 cursor-pointer ${
-                  like === -1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                }`}
-              />
-            </div>
-          </div>
         </div>
 
         <div className="border-4 rounded-lg border-[#4676FA] border-opacity-20 p-6 font-poppins font-semibold">

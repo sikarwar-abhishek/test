@@ -2,6 +2,7 @@ import axios from "axios";
 import { API_ENDPOINTS } from "../constants/constant";
 import { handleApiError } from "./errorHandler";
 import api from "./interceptor";
+import { wait } from "../utils/helper";
 
 export const getAllLoungePosts = async (page) => {
   try {
@@ -129,10 +130,12 @@ export const getPresignedUrl = async (fileData) => {
 };
 
 export const uploadImageToS3 = async (uploadUrl, file) => {
+  console.log(uploadUrl, file);
   try {
+    // await wait(100);
     const response = await axios.put(uploadUrl, file, {
       headers: {
-        "Content-Type": "application/octet-stream",
+        "Content-Type": file.type,
       },
     });
     return response.data;
@@ -141,3 +144,17 @@ export const uploadImageToS3 = async (uploadUrl, file) => {
     throw err;
   }
 };
+
+
+export const getSinglePost = async (id)=> {
+  try {
+    // await wait(100);
+    const response = await api.get(
+      `${API_ENDPOINTS.lounge_posts}${id}/`
+    );
+    return response.data;
+  } catch (err) {
+    handleApiError(err);
+    throw err;
+  }
+}

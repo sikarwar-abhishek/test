@@ -30,7 +30,7 @@ function LoginPage() {
 
         {/* Form Container - Centered */}
         <div className="flex-1 flex flex-col justify-center">
-          <div className="max-w-lg w-full mx-auto">
+          <div className="max-w-md w-full mx-auto">
             {currentStep === 1 && (
               <LoginForm setCurrentStep={setCurrentStep} form={form} />
             )}
@@ -53,11 +53,9 @@ function LoginPage() {
       {/* Right Side - Image */}
       <div className="hidden -z-10 lg:flex flex-1 relative overflow-hidden">
         <div className="fixed w-screen h-screen inset-0 place-content-center">
-          <div className="relative w-[calc(80dvw-2rem)] ml-auto mr-4 h-[calc(100dvh-2rem)]">
+          <div className="rounded-xl relative w-[calc(80dvw-2rem)] ml-auto mr-4 h-[calc(100dvh-2rem)]">
             <Image
               src="/asset/container.png"
-              quality={100}
-              priority
               alt="Daily IQ Onboarding"
               fill
               className="w-full h-auto object-fill"

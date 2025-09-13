@@ -1,39 +1,24 @@
-"use client";
-import { Info, X, Star } from "lucide-react";
-import Image from "next/image";
-import Icon from "../../common/Icon";
-import { useState, useRef, useCallback, useMemo } from "react";
-import { Modal } from "../../common/Modal";
-import { useRouter } from "next/navigation";
-import { submitChessAnswer } from "@/src/api/challenges";
-import { puzzleFeedback } from "@/src/api/feedback";
-import { useMutationHandler } from "@/src/hooks/useMutationHandler";
-import { useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
+import Image from "next/image";
+import { Info, X, Star, Check } from "lucide-react";
+import { useMutationHandler } from "@/src/hooks/useMutationHandler";
+import { submitPracticeChessAnswer } from "@/src/api/practice";
+import Icon from "../common/Icon";
+import { useState, useMemo, useEffect } from "react";
 
-function PlayChessChallenge({ challengeId, currentPuzzle }) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
-
-  // Initialize like state based on existing feedback
-  const initializeLikeState = () => {
-    const feedback =
-      currentPuzzle.feedback || currentPuzzle.puzzleDetail?.feedback;
-    if (feedback === "like") return 1;
-    if (feedback === "unlike") return -1;
-    return 0;
-  };
-
-  const [like, setLike] = useState(initializeLikeState);
-  const debounceTimeoutRef = useRef(null);
-  const lastActionRef = useRef(null);
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Steps count and regex from puzzle detail
-  const stepsCount = currentPuzzle?.puzzleDetail?.number_of_steps || 4;
+  const stepsCount =
+    currentPuzzle?.puzzleDetail?.number_of_steps ||
+    currentPuzzle?.number_of_steps ||
+    4;
   const inputRegexString =
     currentPuzzle?.puzzleDetail?.input_regex ||
+    currentPuzzle?.input_regex ||
     "^(O-O(-O)?|[KQRBN]?[a-h1-8]?x?[a-h][1-8](=[QRBN])?[+#]?|[a-h][1-8](=[QRBN])?[+#]?)$";
   const inputRegex = useMemo(
     () => new RegExp(inputRegexString),
@@ -44,41 +29,27 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
     Array.from({ length: stepsCount }, () => "")
   );
 
+  // Reset submission state when puzzle changes
+  useEffect(() => {
+    setSubmissionResult(null);
+    setIsSubmitted(false);
+    setMoves(Array.from({ length: stepsCount }, () => ""));
+  }, [currentPuzzle.puzzleId, stepsCount]);
+
   const submitMutation = useMutationHandler(
-    ({ puzzleId, answerData }) => submitChessAnswer(puzzleId, answerData),
+    ({ puzzleId, answerData }) =>
+      submitPracticeChessAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-        setIsModalOpen(true);
+        console.log("Practice chess answer submitted successfully:", data);
+        // Extract the puzzle data from the response
+        const puzzleData =
+          data.puzzles && data.puzzles.length > 0 ? data.puzzles[0] : null;
+        setSubmissionResult(puzzleData);
+        setIsSubmitted(true);
+        // Don't call onSubmitSuccess immediately, let user see result first
       },
     }
-  );
-
-  // Mutation for sending feedback to API
-  const feedbackMutation = useMutationHandler(puzzleFeedback, {
-    onSuccess: (data) => {
-      // Invalidate challengesList query to refresh data
-      queryClient.invalidateQueries(["challengesList", challengeId]);
-    },
-  });
-
-  // Debounced API call function
-  const debouncedFeedbackCall = useCallback(
-    (action) => {
-      // Clear existing timeout
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-
-      // Set new timeout
-      debounceTimeoutRef.current = setTimeout(() => {
-        const feedbackData = {
-          puzzle: currentPuzzle.puzzleId,
-          action: action,
-        };
-        feedbackMutation.mutate(feedbackData);
-      }, 1000); // 1 second debounce
-    },
-    [currentPuzzle.puzzleId, feedbackMutation]
   );
 
   const handleSubmit = () => {
@@ -88,7 +59,7 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
       alert("Please fill all the steps before submitting.");
       return;
     }
-
+    // console.log(trimmedMoves);
     const invalidIndexes = trimmedMoves
       .map((m, i) => ({ i, valid: inputRegex.test(m) }))
       .filter((x) => !x.valid)
@@ -103,7 +74,10 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
       moves: trimmedMoves,
     };
 
-    submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
+    submitMutation.mutate({
+      puzzleId: currentPuzzle.puzzleId || currentPuzzle.id,
+      answerData,
+    });
   };
 
   const handleInfoClick = () => {
@@ -114,29 +88,118 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
     setIsInstructionsOpen(false);
   };
 
-  function handleLikeOrDislike(value) {
-    let newLikeValue;
-    let action;
+  const handleNext = () => {
+    // Reset state and call parent success handler
+    setSubmissionResult(null);
+    setIsSubmitted(false);
+    setMoves(Array.from({ length: stepsCount }, () => ""));
+    onSubmitSuccess(submissionResult);
+  };
 
-    if (!like) {
-      newLikeValue = value;
-      action = value === 1 ? "like" : "unlike";
-    } else {
-      if (value === like) {
-        newLikeValue = 0;
-        action = "neutral";
-      } else {
-        newLikeValue = value;
-        action = value === 1 ? "like" : "unlike";
+  // Render solution feedback similar to past challenges
+  const renderSolutionFeedback = () => {
+    if (!isSubmitted || !submissionResult) return null;
+
+    const { is_correct, puzzleDetail } = submissionResult;
+    const user_answer = JSON.parse(puzzleDetail?.user_answer);
+    const correct_answer = puzzleDetail?.solution_moves;
+    console.log(puzzleDetail)
+    const renderUserMoves = () => {
+      if (!user_answer || !Array.isArray(user_answer)) {
+        return <p className="text-gray-600 font-opensans">No moves provided</p>;
       }
+
+      return (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {user_answer.map((move, index) => (
+            <div
+              key={index}
+              className="bg-green-100 border border-green-300 rounded-lg p-3 text-center"
+            >
+              <span className="font-semibold text-green-800">{move}</span>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    const renderCorrectMoves = () => {
+      if (!correct_answer || !Array.isArray(correct_answer)) {
+        return <p className="text-gray-600 font-opensans">Solution not available</p>;
+      }
+
+      return (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {correct_answer.map((move, index) => (
+            <div
+              key={index}
+              className="bg-green-100 border border-green-300 rounded-lg p-3 text-center"
+            >
+              <span className="font-semibold text-green-800">{move}</span>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    if (is_correct) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Check className="w-5 h-5 text-green-500" />
+            <span className="font-semibold font-monserrat text-[#2C9D00]">
+              Correct
+            </span>
+          </div>
+
+          <p className="text-blue-500 font-medium font-poppins">
+            You nailed it! Keep up the great work.
+          </p>
+
+          <div className="rounded-lg">
+            <h3 className="font-medium font-poppins text-gray-900 mb-4">
+              Your Answer:
+            </h3>
+            {renderUserMoves()}
+          </div>
+
+          {/* <div className="rounded-lg">
+            <h3 className="font-medium font-poppins text-gray-900 mb-4">
+              Solution:
+            </h3>
+            {renderCorrectMoves()}
+          </div> */}
+        </div>
+      );
+    } else {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <X className="w-5 h-5 text-red-600" />
+            <span className="text-red-600 font-semibold">Incorrect</span>
+          </div>
+
+          <p className="text-blue-500 font-medium">
+            Better Luck Next Time!
+          </p>
+
+          <div className="rounded-lg">
+            <h3 className="font-medium font-poppins text-gray-900 mb-4">
+              Your Answer:
+            </h3>
+            {renderUserMoves()}
+          </div>
+
+          <div className="rounded-lg">
+            <h3 className="font-medium font-poppins text-gray-900 mb-4">
+              Correct Solution:
+            </h3>
+            {renderCorrectMoves()}
+          </div>
+        </div>
+      );
     }
-
-    setLike(newLikeValue);
-    lastActionRef.current = action;
-
-    // Send feedback to API with debounce
-    debouncedFeedbackCall(action);
-  }
+  };
 
   const handleMoveChange = (index, value) => {
     // Normalize whitespace
@@ -153,8 +216,16 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
 
   // Instructions Popup Component
   const InstructionsPopup = () => {
-    const { instruction, difficultyLevel } = currentPuzzle;
+    const instruction = currentPuzzle?.puzzleDetail?.instruction;
+    const difficultyLevel =
+      currentPuzzle?.difficultyLevel ||
+      currentPuzzle?.puzzleDetail?.difficultyLevel ||
+      2;
+
     const processEscapeSequences = (text) => {
+      if (!text || typeof text !== "string") {
+        return "No instructions available";
+      }
       return text
         .replace(/\\n/g, "\n")
         .replace(/\\t/g, "\t")
@@ -258,9 +329,11 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
   // Derive heading text from description, otherwise fallback to instruction
   const headingText =
     currentPuzzle?.puzzleDetail?.description ||
+    currentPuzzle?.description ||
     currentPuzzle?.instruction ||
     "";
-  const mediaUrl = currentPuzzle?.puzzleDetail?.media_url || "";
+  const mediaUrl =
+    currentPuzzle?.puzzleDetail?.media_url || currentPuzzle?.media_url || "";
   const files = ["A", "B", "C", "D", "E", "F", "G", "H"];
   const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
@@ -275,29 +348,10 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
           >
             <Info fill="#75757580" stroke="white" className="cursor-pointer" />
           </button>
-          <div className="flex gap-2">
-            <div onClick={() => handleLikeOrDislike(1)}>
-              <Icon
-                name={"like"}
-                className={`w-8 h-8 cursor-pointer ${
-                  like === 1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                }`}
-              />
-            </div>
-            <div onClick={() => handleLikeOrDislike(-1)}>
-              <Icon
-                name={"dislike"}
-                className={`w-8 h-8 cursor-pointer ${
-                  like === -1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                }`}
-              />
-            </div>
-          </div>
         </div>
 
         {/* Top prompt */}
         <div className="border-4 rounded-lg border-[#4676FA] border-opacity-20 p-6 font-poppins font-semibold">
-          {/* <span className="text-2xl underline mb-2 block">Question</span> */}
           <p className="text-2xl">{headingText}</p>
         </div>
 
@@ -355,56 +409,65 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
           </div>
         ) : null}
 
-        {/* Steps inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {moves.map((move, idx) => {
-            const value = move;
-            const valid = isMoveValid(value.trim());
-            return (
-              <div key={idx} className="flex flex-col">
-                <input
-                  value={value}
-                  onChange={(e) => handleMoveChange(idx, e.target.value)}
-                  placeholder={
-                    idx === 0 ? `Step ${idx + 1} (eg., e4)` : `Step ${idx + 1}`
-                  }
-                  className={`border w-full rounded-lg p-4 font-roboto outline-none ${
-                    value && !valid
-                      ? "border-red-400 bg-red-50"
-                      : "border-gray-300"
-                  }`}
-                />
-                {value && !valid && (
-                  <span className="text-xs text-red-600 mt-1">
-                    Invalid notation. Example: e4, Nf3, Qxe5, O-O, Qh7#
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {!isSubmitted ? (
+          <>
+            {/* Steps inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {moves.map((move, idx) => {
+                const value = move;
+                const valid = isMoveValid(value.trim());
+                return (
+                  <div key={idx} className="flex flex-col">
+                    <input
+                      value={value}
+                      onChange={(e) => handleMoveChange(idx, e.target.value)}
+                      placeholder={
+                        idx === 0 ? `Step ${idx + 1} (eg., e4)` : `Step ${idx + 1}`
+                      }
+                      className={`border w-full rounded-lg p-4 font-roboto outline-none ${
+                        value && !valid
+                          ? "border-red-400 bg-red-50"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    {value && !valid && (
+                      <span className="text-xs text-red-600 mt-1">
+                        Invalid notation. Example: e4, Nf3, Qxe5, O-O, Qh7#
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={submitMutation.isPending || !allFilled || !allValid}
-          className="py-2 px-16 sm:py-2 self-center sm:px-32 rounded-lg gap-2 sm:gap-4 border border-transparent font-poppins font-bold flex items-center justify-center text-lg
-            bg-blue-500 text-white transition-all duration-300 ease-in-out
-            hover:-translate-y-1 hover:border-blue-400 hover:shadow-md hover:shadow-blue-400/40
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
-        >
-          {submitMutation.isPending ? "Submitting..." : "Submit"}
-        </button>
+            <button
+              onClick={handleSubmit}
+              disabled={submitMutation.isPending || !allFilled || !allValid}
+              className="py-2 px-16 sm:py-2 self-center sm:px-32 rounded-lg gap-2 sm:gap-4 border border-transparent font-poppins font-bold flex items-center justify-center text-lg
+                bg-blue-500 text-white transition-all duration-300 ease-in-out
+                hover:-translate-y-1 hover:border-blue-400 hover:shadow-md hover:shadow-blue-400/40
+                disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            >
+              {submitMutation.isPending ? "Submitting..." : "Submit"}
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Show solution feedback */}
+            {renderSolutionFeedback()}
+
+            {/* Next button */}
+            <button
+              onClick={handleNext}
+              className="py-2 px-16 sm:py-2 self-center sm:px-32 rounded-lg gap-2 sm:gap-4 border border-transparent font-poppins font-bold flex items-center justify-center text-lg
+                bg-blue-500 text-white transition-all duration-300 ease-in-out
+                hover:-translate-y-1 hover:border-blue-400 hover:shadow-md hover:shadow-blue-400/40"
+            >
+              Next
+            </button>
+          </>
+        )}
       </div>
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={() => {
-          router.replace(`/challenges/${challengeId}`);
-          setIsModalOpen(false);
-          queryClient.invalidateQueries(["challengesList", challengeId]);
-        }}
-      />
 
       {/* Instructions Popup */}
       {isInstructionsOpen && <InstructionsPopup />}
@@ -412,4 +475,4 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
   );
 }
 
-export default PlayChessChallenge;
+export default PlayPracticeChess;

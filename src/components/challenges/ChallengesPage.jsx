@@ -131,7 +131,13 @@ function ChallengeCard({
       {/* Image Section */}
       <div className="relative aspect-square w-full rounded-lg p-2 max-h-48">
         <div className="relative w-full h-full rounded-xl overflow-hidden">
-          <Image src={imageSrc} alt={title} fill className="object-cover" />
+          <Image
+            src={imageSrc}
+            alt={title}
+            fill
+            className="object-cover"
+            quality={80}
+          />
           <div className="absolute inset-0 bg-black/30 z-10"></div>
         </div>
       </div>

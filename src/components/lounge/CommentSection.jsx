@@ -265,8 +265,8 @@ function CommentsSection({ postId, onBack }) {
                     />
                   </div>
 
-                  <div className="flex-1">
-                    <div className="bg-gray-100 rounded-2xl p-3 relative">
+                  <div className="flex-1 overflow-hidden">
+                    <div className="bg-gray-100 rounded-2xl p-3 relative overflow-hidden">
                       {/* 3-dot menu for user's own comments */}
                       {userProfile?.data?.id === comment.comment_by && (
                         <div className="absolute top-2 right-2 dropdown-container">
@@ -292,7 +292,7 @@ function CommentsSection({ postId, onBack }) {
                         </div>
                       )}
 
-                      <h4 className="font-semibold font-poppins text-gray-900 mb-1 text-sm pr-6">
+                      <h4 className="font-semibold font-poppins text-gray-900 mb-1 text-sm pr-6 line-clamp-1">
                         {comment.username || "Anonymous"}
                       </h4>
 

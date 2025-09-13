@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { Clock, MessageCircle, ArrowRight, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,7 +10,12 @@ import PostModal from "./PostModal";
 import CommentsSection from "./CommentSection";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getUserProfile } from "@/src/api/auth";
-import { getAllLoungePosts, togglePostLike } from "@/src/api/lounge";
+import {
+  getAllLoungePosts,
+  togglePostLike,
+  getSinglePost,
+} from "@/src/api/lounge";
+import { useSearchParams } from "next/navigation";
 import {
   useInfiniteQuery,
   useMutation,
@@ -20,7 +25,9 @@ import Icon from "../common/Icon";
 import { formatPostTimestamp } from "@/src/utils/dateUtils";
 import { MdOutlineThumbUp } from "react-icons/md";
 import { RiThumbUpFill } from "react-icons/ri";
+import RightSection from "../Home/RightSection";
 function PostCard({ post, onViewComments, onToggleLike }) {
+  console.log("ok");
   return (
     <div className="bg-white border-b-4 border-[#DDE6FF] py-6 last:border-none">
       <div className="flex items-center gap-3 mb-4">
@@ -117,11 +124,33 @@ function LoungePage() {
 
   const queryClient = useQueryClient();
   const debounceTimeouts = useRef({});
+  const searchParams = useSearchParams();
+  const postId = searchParams.get("postId");
+  const specificPostRef = useRef(null);
 
   // Fetch user profile
   const { data, isLoading } = useQueryHandler(getUserProfile, {
     queryKey: ["user_profile"],
   });
+
+  // Fetch specific post if postId is provided
+  const {
+    data: specificPost,
+    isLoading: specificPostLoading,
+    error: specificPostError,
+  } = useQueryHandler(getSinglePost, {
+    queryKey: ["specific_post", postId],
+    enabled: !!postId,
+    query: postId,
+  });
+
+  // Debug log
+  console.log(
+    "Specific post query key:",
+    ["specific_post", postId],
+    "postId type:",
+    typeof postId
+  );
 
   // Fetch lounge posts with infinite scroll
   const {
@@ -151,6 +180,20 @@ function LoungePage() {
     initialPageParam: 1,
   });
 
+  // Scroll to specific post when it's loaded
+  useEffect(() => {
+    if (specificPost && specificPostRef.current) {
+      const timer = setTimeout(() => {
+        specificPostRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100); // Small delay to ensure DOM is updated
+
+      return () => clearTimeout(timer);
+    }
+  }, [specificPost]);
+
   // Track pending like states
   const pendingLikes = useRef({});
 
@@ -158,7 +201,7 @@ function LoungePage() {
   const likeMutation = useMutation({
     mutationFn: togglePostLike,
     onSuccess: (data, postId) => {
-      // Update with final API response
+      // Update lounge posts cache
       queryClient.setQueryData(["lounge_posts"], (oldData) => {
         if (!oldData) return oldData;
 
@@ -179,18 +222,45 @@ function LoungePage() {
         };
       });
 
+      // Update specific post cache if this is the specific post
+      const urlPostId = searchParams.get("postId");
+      console.log("Like mutation success - checking specific post update:", {
+        specificPost: specificPost?.id,
+        clickedPostId: postId,
+        urlPostId: urlPostId,
+        shouldUpdate: specificPost && specificPost.id == postId,
+      });
+
+      if (specificPost && specificPost.id == postId) {
+        console.log("Updating specific post cache with key:", [
+          "specific_post",
+          urlPostId,
+        ]);
+        queryClient.setQueryData(["specific_post", urlPostId], (oldData) => {
+          console.log("Old specific post data:", oldData);
+          if (!oldData) return oldData;
+          const newData = {
+            ...oldData,
+            likes: data.likes_count,
+            liked_by_me: data.is_liked,
+          };
+          console.log("New specific post data:", newData);
+          return newData;
+        });
+      }
+
       // Clear pending state
       delete pendingLikes.current[postId];
     },
     onError: (error, postId) => {
       console.error("Error toggling like:", error);
 
-      // Revert optimistic update on error
+      const pendingState = pendingLikes.current[postId];
+      if (!pendingState) return;
+
+      // Revert lounge posts cache
       queryClient.setQueryData(["lounge_posts"], (oldData) => {
         if (!oldData) return oldData;
-
-        const pendingState = pendingLikes.current[postId];
-        if (!pendingState) return oldData;
 
         return {
           ...oldData,
@@ -208,6 +278,19 @@ function LoungePage() {
           })),
         };
       });
+
+      // Revert specific post cache if this is the specific post
+      const urlPostId = searchParams.get("postId");
+      if (specificPost && specificPost.id == postId) {
+        queryClient.setQueryData(["specific_post", urlPostId], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            likes: pendingState.originalLikes,
+            liked_by_me: pendingState.originalLikedByMe,
+          };
+        });
+      }
 
       // Clear pending state
       delete pendingLikes.current[postId];
@@ -242,7 +325,7 @@ function LoungePage() {
         ? currentPost.likes + 1
         : currentPost.likes - 1;
 
-      // Update UI immediately
+      // Update lounge posts cache immediately
       queryClient.setQueryData(["lounge_posts"], (oldData) => {
         if (!oldData) return oldData;
 
@@ -263,13 +346,30 @@ function LoungePage() {
         };
       });
 
+      // Update specific post cache immediately if this is the specific post
+      const urlPostId = searchParams.get("postId");
+      if (specificPost && specificPost.id == postId) {
+        console.log("Optimistic update for specific post with key:", [
+          "specific_post",
+          urlPostId,
+        ]);
+        queryClient.setQueryData(["specific_post", urlPostId], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            likes: newLikes,
+            liked_by_me: newLikedByMe,
+          };
+        });
+      }
+
       // Set debounced API call
       debounceTimeouts.current[postId] = setTimeout(() => {
         likeMutation.mutate(postId);
         delete debounceTimeouts.current[postId];
       }, 500); // 500ms debounce for better UX
     },
-    [likeMutation, allPosts, queryClient]
+    [likeMutation, allPosts, queryClient, searchParams, specificPost]
   );
 
   // Cleanup timeouts on unmount
@@ -281,7 +381,8 @@ function LoungePage() {
 
   // Flatten all pages into a single array
 
-  if (isLoading || postsLoading) return <p>Loading..</p>;
+  if (isLoading || (postsLoading && allPosts.length === 0 && !specificPost))
+    return <p>Loading..</p>;
   const value = data?.data;
   const { proficiency_score, community_score, fitness_score } = value;
   const stats = [
@@ -398,7 +499,7 @@ function LoungePage() {
 
             {/* Feed Posts */}
             <div className="font-poppins">
-              {postsLoading && allPosts.length === 0 ? (
+              {postsLoading && allPosts.length === 0 && !specificPost ? (
                 // Loading skeleton
                 <div className="space-y-6">
                   {[...Array(3)].map((_, i) => (
@@ -435,17 +536,56 @@ function LoungePage() {
                     Retry
                   </button>
                 </div>
-              ) : allPosts.length > 0 ? (
+              ) : allPosts.length > 0 || specificPost ? (
                 // Render posts
                 <>
-                  {allPosts.map((post) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      onViewComments={handleViewComments}
-                      onToggleLike={handleToggleLike}
-                    />
-                  ))}
+                  {/* Specific Post - shown at top when postId is in URL */}
+                  {specificPost && (
+                    <motion.div
+                      ref={specificPostRef}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="mb-6"
+                    >
+                      <div className="p-1 rounded-xl">
+                        <PostCard
+                          key={`specific-${specificPost.id}`}
+                          post={specificPost}
+                          onViewComments={handleViewComments}
+                          onToggleLike={handleToggleLike}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Regular Feed Posts */}
+                  {allPosts.length > 0 && (
+                    <>
+                      {/* Feed Posts Header */}
+                      {specificPost && (
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-gray-700 font-poppins">
+                            Feed Posts
+                          </h3>
+                          <div className="h-px bg-gradient-to-r from-blue-200 to-purple-200 mt-2"></div>
+                        </div>
+                      )}
+
+                      {allPosts
+                        .filter(
+                          (post) => !specificPost || post.id != specificPost.id
+                        ) // Avoid duplicates
+                        .map((post) => (
+                          <PostCard
+                            key={post.id}
+                            post={post}
+                            onViewComments={handleViewComments}
+                            onToggleLike={handleToggleLike}
+                          />
+                        ))}
+                    </>
+                  )}
 
                   {/* Load More Button */}
                   {hasNextPage && (
@@ -464,10 +604,12 @@ function LoungePage() {
                   )}
                 </>
               ) : (
-                // Empty state
-                <div className="text-center py-8 text-gray-500">
-                  <p>No posts available at the moment.</p>
-                </div>
+                // Empty state - only show if no specific post either
+                !specificPost && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No posts available at the moment.</p>
+                  </div>
+                )
               )}
             </div>
           </motion.div>
@@ -513,80 +655,7 @@ function LoungePage() {
           </AnimatePresence>
 
           {/* Original Sidebar - Only show when comments are not open */}
-          {!showComments && (
-            <div className="w-96 space-y-6 font-poppins">
-              {/* What's New Section */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">What&apos;s New</h3>
-                  <ArrowRight size={20} />
-                </div>
-
-                <div className="relative rounded-xl overflow-hidden">
-                  <div className="relative h-48">
-                    <Image
-                      src="/asset/mug.jpg"
-                      alt="Daily Challenge"
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center p-4 drop-shadow-lg">
-                      <div className="flex flex-col gap-2 items-center">
-                        <h4 className="text-white text-xl font-semibold">
-                          Daily Challenge
-                        </h4>
-                        <div className="flex items-center font-inter gap-2 text-white">
-                          <Clock size={16} />
-                          <span className="text-sm">16 : 20 : 00</span>
-                        </div>
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 text-xs rounded-lg font-bold transition-colors">
-                          Start Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ongoing Challenge Section */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium">Ongoing Challenge</h3>
-                  <ArrowRight size={20} />
-                </div>
-
-                <div className="relative rounded-xl overflow-hidden mb-4">
-                  <div className="relative h-48">
-                    <Image
-                      src="/asset/mug.jpg"
-                      alt="Challenge"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3 drop-shadow-sm">
-                  <h4 className="font-semibold text-gray-800">Challenge_1</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Progress</span>
-                      <span className="text-orange-500 font-medium">60%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: "60%" }}
-                      ></div>
-                    </div>
-                  </div>
-                  <button className="w-full bg-blue-500 hover:bg-blue-600 text-sm text-white py-3 rounded-lg font-bold transition-colors">
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {!showComments && <RightSection />}
         </div>
       </div>
       <PostModal

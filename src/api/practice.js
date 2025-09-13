@@ -62,3 +62,15 @@ export const submitPracticeGridAnswer = async (puzzleId, formData) => {
     throw error;
   }
 };
+export const submitPracticeChessAnswer = async (puzzleId, formData) => {
+  try {
+    const response = await api.post(
+      `${API_ENDPOINTS.training_chess_submit}${puzzleId}/submit/`,
+      formData
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};

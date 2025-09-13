@@ -2,23 +2,13 @@ import axios from "axios";
 import Cookies from "js-cookie";
 export const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-const API_HEADERS_DEV = {
-  "Content-Type": "application/json",
-  "ngrok-skip-browser-warning": "true",
-};
-
-const API_HEADERS_PROD = {
+const headers = {
   "Content-Type": "application/json",
 };
-
-const headers =
-  process.env.NEXT_PUBLIC_MODE === "development"
-    ? { ...API_HEADERS_DEV }
-    : { ...API_HEADERS_PROD };
 
 export const setAuthToken = (token) => {
   Cookies.set("authToken", token, {
-    secure: process.env.NEXT_PUBLIC_MODE === "production",
+    secure: process.env.NEXT_PUBLIC_MODE === "development",
     sameSite: "Lax",
   });
 };
@@ -26,7 +16,6 @@ export const setAuthToken = (token) => {
 export const getToken = () => Cookies.get("authToken");
 export const removeToken = () => Cookies.remove("authToken");
 export const getRefreshToken = () => {
-  console.log(Cookies.get("refresh_token"));
   return Cookies.get("refresh_token");
 };
 
@@ -73,7 +62,6 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       const refreshToken = getRefreshToken();
-      console.log(refreshToken);
       if (!refreshToken) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");

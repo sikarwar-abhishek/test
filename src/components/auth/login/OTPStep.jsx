@@ -109,7 +109,7 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
         <div className="font-poppins text-xs space-y-1">
           <p>
             A 5 digit OTP has been sent to your email address{" "}
-            <span className="font-medium">{email}</span>
+            <span className="font-medium">&nbsp;*****{".com"}</span>
           </p>
           <p>
             Change Email Address.{" "}

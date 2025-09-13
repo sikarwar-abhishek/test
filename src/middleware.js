@@ -8,7 +8,13 @@ export function middleware(request) {
 
   const token = request.cookies.get("authToken")?.value;
 
-  const protectedRoutes = ["/home", "/challenges"];
+  const protectedRoutes = [
+    "/home",
+    "/challenges",
+    "/lounge",
+    "/myprofile",
+    "/practice",
+  ];
   const publicRoutes = ["/login", "/"];
 
   const isProtectedRoute = protectedRoutes.some((route) =>

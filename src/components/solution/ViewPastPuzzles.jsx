@@ -8,6 +8,7 @@ import { pastChallengesDetails } from "@/src/api/challenges";
 import Spinner from "../common/Spinner";
 import PuzzleSolutionViewer from "./PuzzleSolutionViewer";
 import GridSolutionViewer from "./GridSolutionViewer";
+import ChessSolutionViewer from "./ChessSolutionViewer";
 
 const customStyles = `
   @keyframes fadeIn {
@@ -63,9 +64,9 @@ function ViewPastPuzzles({ challengeId, date }) {
   });
 
   const handlePuzzleClick = (puzzle) => {
-    // Handle subjective and grid puzzles
+    // Handle subjective, grid, and chess puzzles
     const puzzleType = puzzle.type?.toLowerCase();
-    if (puzzleType === "subjective" || puzzleType === "grid") {
+    if (puzzleType === "subjective" || puzzleType === "grid" || puzzleType === "chess") {
       setSelectedPuzzle(puzzle);
     }
   };
@@ -99,6 +100,15 @@ function ViewPastPuzzles({ challengeId, date }) {
     if (puzzleType === "grid") {
       return (
         <GridSolutionViewer
+          puzzle={selectedPuzzle}
+          onBack={handleBackToList}
+          challengeId={challengeId}
+          date={date}
+        />
+      );
+    } else if (puzzleType === "chess") {
+      return (
+        <ChessSolutionViewer
           puzzle={selectedPuzzle}
           onBack={handleBackToList}
           challengeId={challengeId}
@@ -185,7 +195,8 @@ function ViewPastPuzzles({ challengeId, date }) {
                       key={puzzle.puzzleId || index}
                       className={`rounded-2xl p-4 flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transition-all duration-300 ease-in-out transform ${
                         puzzle.type?.toLowerCase() === "subjective" ||
-                        puzzle.type?.toLowerCase() === "grid"
+                        puzzle.type?.toLowerCase() === "grid" ||
+                        puzzle.type?.toLowerCase() === "chess"
                           ? "cursor-pointer hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 hover:shadow-blue-500/30"
                           : "cursor-not-allowed opacity-75"
                       } ${puzzle.is_submitted ? "animate-statusChange" : ""}`}

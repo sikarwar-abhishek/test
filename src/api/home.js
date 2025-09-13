@@ -25,3 +25,14 @@ export const recommendations = async (page) => {
     throw error;
   }
 };
+
+export const getAllRecommendationBasedOnUser = async () => {
+  try {
+    // await wait(100);
+    const response = await api.get(API_ENDPOINTS.right_section);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};

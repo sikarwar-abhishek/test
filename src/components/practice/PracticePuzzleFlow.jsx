@@ -9,6 +9,7 @@ import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getPracticePuzzlesDaily } from "@/src/api/practice";
 import PlayPracticeSubjective from "./PlayPracticeSubjective";
 import PlayPracticeGrid from "./PlayPracticeGrid";
+import PlayPracticeChess from "./PlayPracticeChess";
 
 function PracticePuzzleFlow() {
   const router = useRouter();
@@ -134,6 +135,13 @@ function PracticePuzzleFlow() {
     } else if (puzzleType === "grid") {
       return (
         <PlayPracticeGrid
+          currentPuzzle={currentPuzzle}
+          onSubmitSuccess={handleSubmitSuccess}
+        />
+      );
+    } else if (puzzleType === "chess") {
+      return (
+        <PlayPracticeChess
           currentPuzzle={currentPuzzle}
           onSubmitSuccess={handleSubmitSuccess}
         />

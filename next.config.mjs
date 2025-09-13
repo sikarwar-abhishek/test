@@ -6,7 +6,11 @@ const config = withBundleAnalyzer({
   // Your existing Next.js configuration
   reactStrictMode: true,
   images: {
-    domains: ["your-bucket.s3.amazonaws.com", "d14n9lrxk2hjyc.cloudfront.net"],
+    remotePatterns: [
+      {
+        hostname: "d14n9lrxk2hjyc.cloudfront.net",
+      },
+    ],
   },
   // Other configurations...
 });
