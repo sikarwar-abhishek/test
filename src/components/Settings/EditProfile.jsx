@@ -91,7 +91,6 @@ function EditProfile({ onBack }) {
     ) || [];
 
   const onSubmit = (data) => {
-    console.log("Profile update data:", data);
     update(data);
   };
 
@@ -104,12 +103,12 @@ function EditProfile({ onBack }) {
   return (
     <div className="">
       {/* Header */}
-      <h1 className="text-xl font-semibold text-gray-600 mb-8 font-poppins">
+      <h1 className="sm:text-xl font-semibold text-gray-600 sm:mb-8 mb-4 font-poppins">
         Edit Profile
       </h1>
 
       <Form onSubmit={handleSubmit(onSubmit)} className="">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6 sm:mb-6">
           <FormRow error={errors?.first_name?.message}>
             <input
               type="text"
@@ -136,7 +135,7 @@ function EditProfile({ onBack }) {
         </div>
 
         {/* Second Row - Email and Date of Birth */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6 sm:mb-6">
           <FormRow>
             <input
               type="email"
@@ -171,7 +170,7 @@ function EditProfile({ onBack }) {
         </div>
 
         {/* Third Row - Gender and Location */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6 sm:mb-6">
           <FormRow error={errors?.gender?.message}>
             <div className="relative">
               <select
@@ -271,7 +270,7 @@ function EditProfile({ onBack }) {
         </div>
 
         {/* Fourth Row - Job Profile and Goals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6">
           <FormRow error={errors?.job_profile?.message}>
             <div className="relative">
               <Controller
@@ -376,8 +375,7 @@ function EditProfile({ onBack }) {
           <Link
             href={"/myprofile"}
             type="button"
-            // onClick={handleBack}
-            className="w-full sm:w-auto px-8 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors font-poppins font-medium"
+            className="w-full text-center sm:w-auto px-8 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors font-poppins font-medium"
           >
             Back
           </Link>

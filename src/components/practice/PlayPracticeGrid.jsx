@@ -45,7 +45,6 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
       submitPracticeGridAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-        console.log("Practice grid answer submitted successfully:", data);
         // Extract the puzzle data from the response
         const puzzleData =
           data.puzzles && data.puzzles.length > 0 ? data.puzzles[0] : null;
@@ -90,13 +89,6 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     const answerData = {
       solution_grid: grid,
     };
-
-    console.log(
-      "Submitting to puzzleId:",
-      currentPuzzle.puzzleId,
-      "with data:",
-      answerData
-    );
     submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
   };
 

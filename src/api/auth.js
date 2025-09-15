@@ -1,4 +1,3 @@
-import axios from "axios";
 import { API_ENDPOINTS } from "../constants/constant";
 import { wait } from "../utils/helper";
 import { handleApiError } from "./errorHandler";
@@ -55,22 +54,6 @@ export const updateProfile = async (formData) => {
     return response.data;
   } catch (error) {
     handleApiError(error, error?.response?.data?.data?.message);
-    throw error;
-  }
-};
-
-export const getCities = async () => {
-  try {
-    // await wait(2);
-    const response = await axios.post(
-      "https://countriesnow.space/api/v0.1/countries/cities",
-      {
-        country: "india",
-      }
-    );
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
     throw error;
   }
 };

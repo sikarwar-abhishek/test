@@ -45,9 +45,7 @@ function PracticeChallenges() {
       setUserAnswer("");
       setSubmittedAnswer("");
       setAnswerState("initial");
-    } else {
-      console.log("All puzzles completed!");
-    }
+    } 
   };
 
   const renderFeedback = () => {

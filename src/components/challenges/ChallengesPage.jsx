@@ -174,9 +174,7 @@ function ChallengesPage() {
     queryKey: ["challenges"],
   });
 
-  const handleStartChallenge = (challengeId) => {
-    console.log(`Starting challenge ${challengeId}`);
-  };
+  const handleStartChallenge = (challengeId) => {};
 
   const handleFilterChange = (filters) => {
     setActiveFilters(filters);
@@ -217,11 +215,16 @@ function ChallengesPage() {
   }, [challenges, searchQuery, activeFilters]);
 
   if (isLoading) return <p>Loading..</p>;
-  if (error) return <p>No challenge found</p>;
+  if (error)
+    return (
+      <p className="text-4xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
+        No challenge found
+      </p>
+    );
 
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
-      <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
+      <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-6 sm:gap-12 bg-background">
         <HomePageHeader
           text={"Challenges"}
           search
@@ -258,9 +261,6 @@ function ChallengesPage() {
                   )}
             </div>
           </div>
-          {/* <div className="max-w-80 min-w-64 sticky top-0 hidden lg:block">
-            <FilterComponent onFilterChange={handleFilterChange} />
-          </div> */}
         </div>
       </div>
     </div>

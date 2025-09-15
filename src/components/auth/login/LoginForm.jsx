@@ -36,7 +36,6 @@ function LoginForm({ setCurrentStep, form }) {
   };
 
   const handleGoogleLogin = () => {
-    console.log("Google login clicked");
   };
 
   return (

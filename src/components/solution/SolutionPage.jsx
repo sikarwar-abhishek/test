@@ -10,7 +10,6 @@ import Spinner from "../common/Spinner";
 import { useRouter } from "next/navigation";
 
 function SolutionPage({ challengeId }) {
-  console.log(challengeId);
   const router = useRouter();
   const {
     data,
@@ -46,7 +45,6 @@ function SolutionPage({ challengeId }) {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleChallengeClick = (challengeId, date) => {
-    console.log(`Viewing solution for challenge ${challengeId}`);
     router.push(`/solution/${challengeId}/previous/view?date=${date}`);
   };
 

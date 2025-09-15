@@ -2,7 +2,6 @@ import { Star } from "lucide-react";
 import Markdown from "react-markdown";
 
 export default function Instructions({ currentPuzzle, setPlay, onBack }) {
-  console.log(currentPuzzle);
   const { instruction, difficultyLevel, is_submitted } = currentPuzzle;
   const processEscapeSequences = (text) => {
     return text

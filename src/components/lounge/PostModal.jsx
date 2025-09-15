@@ -35,7 +35,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
     },
   });
   const handleSubmit = async () => {
-    if (!postContent.trim()) return;
+    if (!postContent.trim() && !selectedImage) return;
 
     try {
       let mediaUrl = null;
@@ -98,7 +98,6 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
 
       const imageUrl = URL.createObjectURL(file);
       setSelectedImage(imageUrl);
-      console.log(file);
       setSelectedFile(file);
     }
   };
@@ -130,7 +129,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl mx-auto bg-white rounded-2xl p-6 border-0 shadow-xl">
+      <DialogContent className="sm:max-w-2xl sm:mx-auto bg-white rounded-2xl sm:m-0 p-4 sm:p-6 border-0 shadow-xl">
         <DialogTitle className="sr-only">Create New Post</DialogTitle>
 
         <div className="space-y-6">
@@ -208,7 +207,11 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
           {/* Post Button */}
           <Button
             onClick={handleSubmit}
-            disabled={!postContent.trim() || isPosting || isUploading}
+            disabled={
+              (!postContent.trim() && !selectedImage) ||
+              isPosting ||
+              isUploading
+            }
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-poppins font-bold text-white py-2 px-6 rounded-xl text-lg h-auto transition-colors flex items-center justify-center gap-2"
           >
             {(isPosting || isUploading) && (

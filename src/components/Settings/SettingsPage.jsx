@@ -5,7 +5,6 @@ import HomePageHeader from "../common/HomePageHeader";
 import Icon from "../common/Icon";
 import { ArrowRight } from "lucide-react";
 import LogOutPopup from "./LogOutPopup";
-import EditProfile from "./EditProfile";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -18,16 +17,6 @@ const settingsOptions = [
     icon: "pen",
     title: "Edit Profile",
   },
-  // {
-  //   id: 2,
-  //   icon: "msg",
-  //   title: "About Us",
-  // },
-  // {
-  //   id: 4,
-  //   icon: "question",
-  //   title: "Help & Support",
-  // },
   {
     id: 5,
     icon: "logout",
@@ -38,7 +27,6 @@ const settingsOptions = [
 function SettingsPage() {
   const router = useRouter();
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false);
   const { data, isLoading } = useQueryHandler(getUserProfile, {
     queryKey: ["user_profile"],
   });
@@ -52,30 +40,12 @@ function SettingsPage() {
 
   const handleOptionClick = (optionId) => {
     if (optionId === 1) {
-      // Edit Profile
-      // setShowEditProfile(true);
       router.push("/myprofile/edit");
     } else if (optionId === 5) {
-      // Log Out
       setShowLogoutPopup(true);
     }
   };
 
-  const handleBackToSettings = () => {
-    setShowEditProfile(false);
-  };
-
-  // If edit profile is active, show EditProfile component
-  if (showEditProfile) {
-    return (
-      <div className="flex flex-1 max-h-screen overflow-auto">
-        <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
-          <HomePageHeader text={"My Profile"} onBack={handleBackToSettings} />
-          <EditProfile onBack={handleBackToSettings} />
-        </div>
-      </div>
-    );
-  }
   if (isLoading) return <p>Loading..</p>;
   const value = data?.data;
 
@@ -112,9 +82,6 @@ function SettingsPage() {
                 <span className="font-medium text-xl text-black leading-4">
                   {value?.first_name} {value?.last_name}
                 </span>
-                {/* <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-md font-semibold">
-                  Pro
-                </span> */}
               </div>
               <span className="font-poppins text-gray-500 text-center font-normal">
                 {value?.email}

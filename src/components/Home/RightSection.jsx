@@ -5,7 +5,7 @@ import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { ArrowRight, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import TopLeaderborad from "./TopLeaderborad";
+import TopLeaderboard from "./TopLeaderboard";
 
 const DIFFICULTY_MAP = {
   1: "Easy",
@@ -42,16 +42,14 @@ function RightSection() {
       </div>
     );
 
-  console.log(recommendations);
   const {
     whats_new: { daily_challenge },
     ongoing_challenge,
     recently_attempted,
     leaderboard,
   } = recommendations;
-  console.log(daily_challenge, daily_challenge?.action_url.split("/api")[1]);
   return (
-    <div className="w-96 space-y-6 font-poppins hidden sm:block">
+    <div className="sm:w-96 w-full space-y-6 font-poppins hidden sm:block">
       {/* What's New Section */}
       {daily_challenge && (
         <div className="bg-white rounded-xl p-4 shadow-sm border space-y-4">
@@ -177,7 +175,9 @@ function RightSection() {
           ))}
         </div>
       )}
-      {leaderboard && <TopLeaderborad leaderboard={leaderboard} />}
+      {leaderboard && leaderboard?.top_users?.length > 0 && (
+        <TopLeaderboard leaderboard={leaderboard} />
+      )}
     </div>
   );
 }

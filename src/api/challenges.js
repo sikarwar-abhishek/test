@@ -25,7 +25,6 @@ export const getChallengesList = async (challengeId) => {
 };
 
 export const getPastChallenges = async (challengeId, page = 1) => {
-  console.log(challengeId);
   try {
     // await wait(100);
     const response = await api.get(
@@ -52,7 +51,6 @@ export const pastChallengesDetails = async (challengeId, date) => {
 };
 
 export const submitSubjectiveAnswer = async (puzzleId, formData) => {
-  console.log(puzzleId, formData);
   try {
     // await wait(100);
     const response = await api.post(
@@ -67,7 +65,6 @@ export const submitSubjectiveAnswer = async (puzzleId, formData) => {
 };
 
 export const submitChessAnswer = async (puzzleId, formData) => {
-  console.log(puzzleId, formData);
   try {
     // await wait(100);
     const response = await api.post(
@@ -81,7 +78,6 @@ export const submitChessAnswer = async (puzzleId, formData) => {
   }
 };
 export const submitGridAnswer = async (puzzleId, formData) => {
-  console.log(puzzleId, formData);
   try {
     // await wait(100);
     const response = await api.post(

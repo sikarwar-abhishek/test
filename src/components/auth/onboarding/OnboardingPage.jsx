@@ -61,7 +61,6 @@ function OnboardingPage({ email, otp }) {
 
   const handleSubmit = (data) => {
     const finalData = { ...data, otp };
-    console.log("Onboarding data:", finalData);
     onboarding(finalData);
   };
 

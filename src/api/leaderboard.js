@@ -15,11 +15,11 @@ export const getCurrentLeaderboard = async (challengeId, page = 1) => {
   }
 };
 
-export const getPastLeaderboard = async (page = 1) => {
+export const getPastLeaderboard = async (challengeId, page = 1) => {
   try {
     // await wait(100);
     const response = await api.get(
-      `${API_ENDPOINTS.leaderboard}past/?page=${page}`
+      `${API_ENDPOINTS.leaderboard}past/?challenge_id=${challengeId}&page=${page}`
     );
     return response.data;
   } catch (error) {

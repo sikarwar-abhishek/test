@@ -8,6 +8,7 @@ import { submitSubjectiveAnswer } from "@/src/api/challenges";
 import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 export default function PlaySubjectiveChallenge({
   challengeId,
@@ -22,15 +23,12 @@ export default function PlaySubjectiveChallenge({
   const initializeLikeState = () => {
     const feedback =
       currentPuzzle.feedback || currentPuzzle.puzzleDetail?.feedback;
-    console.log("Subjective puzzle feedback:", feedback);
-    console.log("Current puzzle data:", currentPuzzle);
     if (feedback === "like") return 1;
     if (feedback === "unlike") return -1;
     return 0;
   };
 
   const [like, setLike] = useState(initializeLikeState);
-  console.log("Subjective initial like state:", like);
   const debounceTimeoutRef = useRef(null);
   const lastActionRef = useRef(null);
   const [answer, setAnswer] = useState("");
@@ -39,7 +37,6 @@ export default function PlaySubjectiveChallenge({
     ({ puzzleId, answerData }) => submitSubjectiveAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-        console.log("Answer submitted successfully:", data);
         setIsModalOpen(true);
       },
     }
@@ -48,9 +45,9 @@ export default function PlaySubjectiveChallenge({
   // Mutation for sending feedback to API
   const feedbackMutation = useMutationHandler(puzzleFeedback, {
     onSuccess: (data) => {
-      console.log("Feedback sent successfully:", data);
       // Invalidate challengesList query to refresh data
       queryClient.invalidateQueries(["challengesList", challengeId]);
+      toast.success("feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);
@@ -71,8 +68,6 @@ export default function PlaySubjectiveChallenge({
           puzzle: currentPuzzle.puzzleId,
           action: action,
         };
-
-        console.log("Sending feedback:", feedbackData);
         feedbackMutation.mutate(feedbackData);
       }, 1000); // 1 second debounce
     },
@@ -87,13 +82,6 @@ export default function PlaySubjectiveChallenge({
     const answerData = {
       answer: answer.trim(),
     };
-
-    console.log(
-      "Submitting to puzzleId:",
-      currentPuzzle.puzzleId,
-      "with data:",
-      answerData
-    );
     submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
   };
 
@@ -246,15 +234,17 @@ export default function PlaySubjectiveChallenge({
           </div>
         </div>
 
-        <div className="border-4 rounded-lg border-[#4676FA] border-opacity-20 p-6 font-poppins font-semibold">
-          <span className="text-2xl underline mb-2 block">Question</span>
-          <p className="text-2xl">{currentPuzzle.puzzleDetail.description}</p>
+        <div className="border-4 rounded-lg border-[#4676FA] border-opacity-20 p-4 sm:p-6 font-poppins font-semibold">
+          <span className="sm:text-2xl underline mb-2 block">Question</span>
+          <p className="sm:text-2xl">
+            {currentPuzzle.puzzleDetail.description}
+          </p>
         </div>
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type your answer"
-          className="border w-full min-h-40 resize-none rounded-lg p-4 font-roboto"
+          className="border w-full min-h-40 resize-none rounded-lg p-4 sm:p-6 font-roboto"
         />
         {/* </div> */}
         <button

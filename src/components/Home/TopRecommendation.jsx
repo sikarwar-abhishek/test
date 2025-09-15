@@ -50,7 +50,7 @@ function TopRecommendation() {
       </div>
 
       {/* Challenge Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid md:grid-cols-1 lg:grid-cols-2 max-w-full gap-6 lg:gap-8">
         {recommendations.map((challenge) => (
           <div
             key={challenge.id}

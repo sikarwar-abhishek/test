@@ -190,15 +190,6 @@ function CommentsSection({ postId, onBack }) {
     };
   }, [showDropdown]);
 
-  const handleLikeComment = (commentId) => {
-    console.log("Liking comment:", commentId);
-    // Add your like comment logic here
-  };
-
-  const handleReplyComment = (commentId) => {
-    console.log("Replying to comment:", commentId);
-    // Add your reply logic here
-  };
 
   return (
     <div className="w-96 bg-white rounded-xl shadow-sm border h-fit max-h-[calc(100vh-8rem)] flex flex-col">

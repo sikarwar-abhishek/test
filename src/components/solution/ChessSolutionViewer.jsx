@@ -9,6 +9,7 @@ import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
+import { toast } from "react-toastify";
 
 function ChessSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const puzzleDetail = puzzle.puzzleDetail || puzzle;
@@ -26,16 +27,8 @@ function ChessSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const debounceTimeoutRef = useRef(null);
   const lastActionRef = useRef(null);
 
-  console.log("Chess puzzle data:", puzzle);
-  console.log(
-    "Chess puzzle feedback:",
-    puzzle.feedback || puzzleDetail.feedback
-  );
-
   const feedbackMutation = useMutationHandler(puzzleFeedback, {
     onSuccess: (data) => {
-      console.log("Feedback sent successfully:", data);
-
       if (challengeId && date) {
         queryClient.invalidateQueries([
           "pastChallengeDetails",
@@ -43,6 +36,7 @@ function ChessSolutionViewer({ puzzle, onBack, challengeId, date }) {
           date,
         ]);
       }
+      toast.success("feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);
@@ -61,7 +55,6 @@ function ChessSolutionViewer({ puzzle, onBack, challengeId, date }) {
           action: action,
         };
 
-        console.log("Sending feedback:", feedbackData);
         feedbackMutation.mutate(feedbackData);
       }, 1000);
     },

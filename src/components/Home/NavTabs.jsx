@@ -3,7 +3,7 @@ const TABS = ["Recommended", "Progress", "Trophies"];
 function NavTabs({ activeTab, setActiveTab }) {
   return (
     <nav className="border-b border-border sticky top-0 z-50 bg-white font-segeo">
-      <div className="flex gap-8">
+      <div className="flex gap-6 sm:gap-8">
         {TABS.map((tab) => (
           <Tab
             key={tab}
@@ -22,7 +22,7 @@ function Tab({ tab, setActiveTab, activeTab }) {
     <button
       key={tab}
       onClick={() => setActiveTab(tab.toLowerCase())}
-      className={`pb-2 ${
+      className={`pb-2 text-sm sm:text-base ${
         activeTab === tab.toLowerCase()
           ? "text-blue-600 font-semibold border-b-2 border-blue-600"
           : "text-muted-foreground font-medium hover:text-foreground"

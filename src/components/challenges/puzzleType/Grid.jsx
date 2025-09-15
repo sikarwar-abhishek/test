@@ -26,7 +26,6 @@ export default function Grid({ challengeId, puzzleId }) {
 
   if (isLoading) return <p>Loading..</p>;
   if (error) return <p> Error</p>;
-  console.log(currentPuzzle);
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">

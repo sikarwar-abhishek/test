@@ -25,7 +25,7 @@ export default function PlayPracticeSubjective({
       submitPracticeSubjectiveAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-        console.log("Practice answer submitted successfully:", data);
+       
         // Extract the puzzle data from the response
         const puzzleData =
           data.puzzles && data.puzzles.length > 0 ? data.puzzles[0] : null;

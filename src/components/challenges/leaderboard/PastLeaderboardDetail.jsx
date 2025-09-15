@@ -19,15 +19,15 @@ function LeaderboardListItem({ player, currentUser }) {
     return null;
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all font-rubik duration-300 hover:shadow-md">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 transition-all font-rubik duration-300 hover:shadow-md">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <span className="w-8 h-8 text-xs text-center content-center border rounded-full">
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          <span className="w-6 h-6 sm:w-8 sm:h-8 text-xs text-center content-center border rounded-full flex-shrink-0">
             {player.rank}
           </span>
 
           <div
-            className={`w-12 h-12 rounded-full overflow-hidden border-2 relative ${getAvatarBorderColor(
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 relative flex-shrink-0 ${getAvatarBorderColor(
               player.rank
             )}`}
           >
@@ -41,15 +41,19 @@ function LeaderboardListItem({ player, currentUser }) {
               }}
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-medium text-gray-800">
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="text-sm sm:text-lg font-medium text-gray-800 truncate">
               {player.username || `User ${player.rank}`}
               {currentUser?.rank === player.rank && " (Me)"}
             </span>
-            <span className="text-sm text-gray-500">{player.score} points</span>
+            <span className="text-xs sm:text-sm text-gray-500">
+              {player.score} points
+            </span>
           </div>
         </div>
-        <div className="flex items-center">{getMedalIcon(player.rank)}</div>
+        <div className="flex items-center flex-shrink-0 ml-2">
+          {getMedalIcon(player.rank)}
+        </div>
       </div>
     </div>
   );
@@ -102,23 +106,25 @@ function PastLeaderboardDetail({ leaderboard, onBack }) {
 
   if (isError) {
     return (
-      <div className="py-4 flex flex-col gap-4">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="py-2 sm:py-4 flex flex-col gap-3 sm:gap-4 px-4 sm:px-0">
+        <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
           <button
             onClick={onBack}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          <div>
-            <h2 className="text-xl font-semibold">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-xl font-semibold truncate">
               {leaderboard.challenge_name}
             </h2>
-            <p className="text-gray-500">{leaderboard.date}</p>
+            <p className="text-sm sm:text-base text-gray-500">
+              {leaderboard.date}
+            </p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-5xl mx-auto w-full">
-          <div className="text-center py-8 text-red-500">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-5xl mx-auto w-full">
+          <div className="text-center py-6 sm:py-8 text-red-500">
             Error loading leaderboard data
           </div>
         </div>
@@ -146,20 +152,22 @@ function PastLeaderboardDetail({ leaderboard, onBack }) {
     validResults.length === 0;
 
   return (
-    <div className="py-4 flex flex-col gap-4">
+    <div className="py-2 sm:py-4 flex flex-col gap-3 sm:gap-4 sm:px-0">
       {/* Header with back button */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
         <button
           onClick={onBack}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
-        <div>
-          <h2 className="text-xl font-semibold">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg sm:text-xl font-semibold truncate">
             {leaderboard.challenge_name}
           </h2>
-          <p className="text-gray-500">{leaderboard.date}</p>
+          <p className="text-sm sm:text-base text-gray-500">
+            {leaderboard.date}
+          </p>
         </div>
       </div>
 
@@ -167,13 +175,13 @@ function PastLeaderboardDetail({ leaderboard, onBack }) {
       {currentUser &&
         currentUser.score !== null &&
         currentUser.score !== undefined && (
-          <div className="bg-white rounded-2xl p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-5xl mx-auto w-full">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-5xl mx-auto w-full">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="w-8 h-8 text-xs text-center content-center border rounded-full">
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                <span className="w-6 h-6 sm:w-8 sm:h-8 text-xs text-center content-center border rounded-full flex-shrink-0">
                   {currentUser?.rank ?? "-"}
                 </span>
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
                   <Image
                     src={"/asset/avatar.png"}
                     fill
@@ -184,9 +192,11 @@ function PastLeaderboardDetail({ leaderboard, onBack }) {
                     }}
                   />
                 </div>
-                <span className="text-lg font-medium text-gray-800">Me</span>
+                <span className="text-sm sm:text-lg font-medium text-gray-800">
+                  Me
+                </span>
               </div>
-              <span className="font-medium font-rubik text-orange-500">
+              <span className="font-medium font-rubik text-orange-500 text-sm sm:text-base flex-shrink-0 ml-2">
                 {currentUser?.score} points
               </span>
             </div>
@@ -194,20 +204,20 @@ function PastLeaderboardDetail({ leaderboard, onBack }) {
         )}
 
       {/* Leaderboard list with infinite scroll - matching CurrentWeekLeaderboard design */}
-      <div className="bg-blue-50 rounded-3xl p-6 max-w-5xl mx-auto w-full">
-        <div className="text-center mb-6">
-          <span className="bg-white px-4 py-2 text-blue-600 font-poppins rounded-lg font-medium text-lg drop-shadow-[0_0_2px_#4676FA33]">
+      <div className="bg-blue-50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-5xl mx-auto w-full">
+        <div className="text-center mb-4 sm:mb-6">
+          <span className="bg-white px-3 py-1.5 sm:px-4 sm:py-2 text-blue-600 font-poppins rounded-lg font-medium text-sm sm:text-lg drop-shadow-[0_0_2px_#4676FA33]">
             {leaderboard.date}
           </span>
         </div>
 
         {shouldShowNoLeaderboard ? (
-          <div className="text-center py-8 text-gray-500 font-poppins">
+          <div className="text-center py-6 sm:py-8 text-gray-500 font-poppins text-sm sm:text-base">
             No leaderboard available
           </div>
         ) : (
           <>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {validResults.map((player, index) => (
                 <LeaderboardListItem
                   key={`${player.id || player.rank}-${index}`}
@@ -221,12 +231,14 @@ function PastLeaderboardDetail({ leaderboard, onBack }) {
             {hasNextPage && (
               <div
                 ref={ref}
-                className="flex items-center justify-center py-4 mt-4"
+                className="flex items-center justify-center py-3 sm:py-4 mt-3 sm:mt-4"
               >
                 {isFetchingNextPage ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                  <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-blue-500" />
                 ) : (
-                  <div className="text-gray-400">Scroll for more</div>
+                  <div className="text-gray-400 text-sm sm:text-base">
+                    Scroll for more
+                  </div>
                 )}
               </div>
             )}

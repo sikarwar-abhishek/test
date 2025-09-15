@@ -5,7 +5,7 @@ import HomePageHeader from "../../common/HomePageHeader";
 import { getChallengesList } from "@/src/api/challenges";
 import Instructions from "./Instructions";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, RedirectType, useRouter } from "next/navigation";
 import PlaySubjectiveChallenge from "./PlaySubjectiveChallenge";
 
 function Subjective({ challengeId, puzzleId }) {
@@ -20,13 +20,13 @@ function Subjective({ challengeId, puzzleId }) {
     query: challengeId,
   });
 
+  if (isLoading) return <p>Loading..</p>;
+  if (error) return <p> Error</p>;
+  if (challengesList.puzzles.length < 1)
+    redirect(`/challenges/${challengeId}/`, RedirectType.replace);
   const [currentPuzzle] = challengesList.puzzles.filter(
     (puzzle) => puzzle.puzzleId === puzzleId
   );
-
-  if (isLoading) return <p>Loading..</p>;
-  if (error) return <p> Error</p>;
-
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">

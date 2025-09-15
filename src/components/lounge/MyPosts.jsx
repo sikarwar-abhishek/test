@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Edit2, MessageCircle, MoreVertical, Trash, Image as ImageIcon, X, Loader2 } from "lucide-react";
+import {
+  Edit2,
+  MessageCircle,
+  MoreVertical,
+  Trash,
+  Image as ImageIcon,
+  X,
+  Loader2,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import HomePageHeader from "../common/HomePageHeader";
 import CommentsSection from "./CommentSection";
@@ -11,7 +19,14 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deletePost, getMyPosts, togglePostLike, editPost, getPresignedUrl, uploadImageToS3 } from "@/src/api/lounge";
+import {
+  deletePost,
+  getMyPosts,
+  togglePostLike,
+  editPost,
+  getPresignedUrl,
+  uploadImageToS3,
+} from "@/src/api/lounge";
 import { formatPostTimestamp } from "@/src/utils/dateUtils";
 import { MdOutlineThumbUp } from "react-icons/md";
 import { RiThumbUpFill } from "react-icons/ri";
@@ -258,7 +273,7 @@ function MyPosts() {
   }, [selectedImage]);
 
   const handleSubmitEdit = async () => {
-    if (!postContent.trim()) return;
+    if (!postContent.trim() && !selectedImage) return;
 
     try {
       let mediaUrl = selectedPost.media_url;
@@ -603,14 +618,14 @@ function MyPosts() {
           </AnimatePresence>
         </div>
       </div>
-      
+
       {/* Delete Confirmation Popup */}
       <DeletePopup
         isOpen={showDeletePopup}
         onClose={() => setShowDeletePopup(false)}
         onConfirm={() => handleDeletePost(showDeletePopup)}
       />
-      
+
       {/* Edit Post Modal */}
       <Dialog open={showEditModal} onOpenChange={closeEditModal}>
         <DialogContent className="max-w-2xl mx-auto bg-white rounded-2xl p-6 border-0 shadow-xl">
@@ -629,8 +644,8 @@ function MyPosts() {
                 />
               </div>
               <h2 className="text-lg font-semibold font-poppins">
-  {selectedPost?.username || "User"}
-</h2>
+                {selectedPost?.username || "User"}
+              </h2>
             </div>
 
             {/* Post Content Textarea */}
@@ -656,7 +671,7 @@ function MyPosts() {
                 />
               </label>
             </div>
-            
+
             {/* Image Preview */}
             {selectedImage && (
               <div className="relative">
@@ -679,7 +694,10 @@ function MyPosts() {
                 {isUploading && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center">
                     <div className="bg-white rounded-lg p-4 flex items-center gap-3">
-                      <Loader2 size={20} className="animate-spin text-blue-500" />
+                      <Loader2
+                        size={20}
+                        className="animate-spin text-blue-500"
+                      />
                       <span className="text-sm font-medium">
                         Uploading image...
                       </span>
@@ -692,13 +710,21 @@ function MyPosts() {
             {/* Update Button */}
             <Button
               onClick={handleSubmitEdit}
-              disabled={!postContent.trim() || editPostMutation.isPending || isUploading}
+              disabled={
+                (!postContent.trim() && !selectedImage) ||
+                editPostMutation.isPending ||
+                isUploading
+              }
               className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-poppins font-bold text-white py-2 px-6 rounded-xl text-lg h-auto transition-colors flex items-center justify-center gap-2"
             >
               {(editPostMutation.isPending || isUploading) && (
                 <Loader2 size={18} className="animate-spin" />
               )}
-              {isUploading ? "Uploading..." : editPostMutation.isPending ? "Updating..." : "Update Post"}
+              {isUploading
+                ? "Uploading..."
+                : editPostMutation.isPending
+                ? "Updating..."
+                : "Update Post"}
             </Button>
           </div>
         </DialogContent>

@@ -7,7 +7,6 @@ function transformUrl(url) {
   const match = url.match(/\/api\/leaderboard\/(\d+)\/(.*)/);
   if (!match) return null;
   const id = match[1];
-  const query = match[2] || "";
   return `/challenges/${id}/leaderboard`;
 }
 
@@ -41,7 +40,7 @@ function LeaderboardItem({ player }) {
   );
 }
 
-function TopLeaderborad({ leaderboard = "" }) {
+export default function TopLeaderboard({ leaderboard = "" }) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border font-poppins">
       <Link
@@ -70,5 +69,3 @@ function TopLeaderborad({ leaderboard = "" }) {
     </div>
   );
 }
-
-export default TopLeaderborad;

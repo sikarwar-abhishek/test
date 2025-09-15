@@ -27,7 +27,6 @@ import { MdOutlineThumbUp } from "react-icons/md";
 import { RiThumbUpFill } from "react-icons/ri";
 import RightSection from "../Home/RightSection";
 function PostCard({ post, onViewComments, onToggleLike }) {
-  console.log("ok");
   return (
     <div className="bg-white border-b-4 border-[#DDE6FF] py-6 last:border-none">
       <div className="flex items-center gap-3 mb-4">
@@ -107,11 +106,13 @@ function PostCard({ post, onViewComments, onToggleLike }) {
 
 function StatCard({ stat }) {
   return (
-    <div className="bg-white rounded-xl p-4 text-center shadow-md drop-shadow-sm">
-      <div className="text-3xl font-semibold text-blue-500 mb-1">
+    <div className="bg-white rounded-xl p-1 sm:p-4 text-center shadow-md drop-shadow-sm">
+      <div className="sm:text-3xl text-xl font-semibold text-blue-500 mb-1">
         {stat.value}
       </div>
-      <div className="text-sm font-medium uppercase">{stat.title}</div>
+      <div className="sm:text-sm text-xs font-medium uppercase">
+        {stat.title}
+      </div>
     </div>
   );
 }
@@ -143,14 +144,6 @@ function LoungePage() {
     enabled: !!postId,
     query: postId,
   });
-
-  // Debug log
-  console.log(
-    "Specific post query key:",
-    ["specific_post", postId],
-    "postId type:",
-    typeof postId
-  );
 
   // Fetch lounge posts with infinite scroll
   const {
@@ -224,27 +217,14 @@ function LoungePage() {
 
       // Update specific post cache if this is the specific post
       const urlPostId = searchParams.get("postId");
-      console.log("Like mutation success - checking specific post update:", {
-        specificPost: specificPost?.id,
-        clickedPostId: postId,
-        urlPostId: urlPostId,
-        shouldUpdate: specificPost && specificPost.id == postId,
-      });
-
       if (specificPost && specificPost.id == postId) {
-        console.log("Updating specific post cache with key:", [
-          "specific_post",
-          urlPostId,
-        ]);
         queryClient.setQueryData(["specific_post", urlPostId], (oldData) => {
-          console.log("Old specific post data:", oldData);
           if (!oldData) return oldData;
           const newData = {
             ...oldData,
             likes: data.likes_count,
             liked_by_me: data.is_liked,
           };
-          console.log("New specific post data:", newData);
           return newData;
         });
       }
@@ -349,10 +329,6 @@ function LoungePage() {
       // Update specific post cache immediately if this is the specific post
       const urlPostId = searchParams.get("postId");
       if (specificPost && specificPost.id == postId) {
-        console.log("Optimistic update for specific post with key:", [
-          "specific_post",
-          urlPostId,
-        ]);
         queryClient.setQueryData(["specific_post", urlPostId], (oldData) => {
           if (!oldData) return oldData;
           return {
@@ -406,7 +382,6 @@ function LoungePage() {
 
   const handlePostSubmit = () => {
     if (postText.trim()) {
-      console.log("Posting:", postText);
       setPostText("");
     }
     setIsPostModalOpen(false);
@@ -427,7 +402,7 @@ function LoungePage() {
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-8 bg-background">
         <HomePageHeader text={"Lounge"} />
 
-        <div className="flex gap-8 mt-6 overflow-auto no-scrollbar">
+        <div className="flex gap-8 sm:mt-6 overflow-auto no-scrollbar">
           {/* Main Content Area */}
           <motion.div
             className="flex-1 space-y-6 overflow-auto no-scrollbar"
@@ -441,10 +416,10 @@ function LoungePage() {
             }}
           >
             {/* User Profile Section */}
-            <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl sm:p-6 p-4">
               <div className="flex items-center justify-between mb-6 font-poppins">
                 <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16">
+                  <div className="relative sm:w-16 sm:h-16 w-8 h-8">
                     <Image
                       src="/asset/avatar.png"
                       alt={value?.first_name}
@@ -453,21 +428,20 @@ function LoungePage() {
                     />
                   </div>
                   <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold text-gray-800">
+                    <h2 className="text-sm sm:text-xl line-clamp-1 overflow-hidden font-semibold text-gray-800">
                       {value?.first_name} {value?.last_name}
                     </h2>
                   </div>
                 </div>
                 <Link
                   href={"/lounge/myposts"}
-                  className="bg-white rounded-lg p-3 text-gray-500 text-sm hover:text-gray-800 font-medium"
+                  className="bg-white rounded-lg p-3 text-gray-500 text-xs sm:text-sm hover:text-gray-800 font-medium"
                 >
                   My Post
                 </Link>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-3 gap-4 font-poppins">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 font-poppins">
                 {stats.map((stat, index) => (
                   <StatCard key={index} stat={stat} />
                 ))}
@@ -475,8 +449,8 @@ function LoungePage() {
             </div>
 
             {/* Post Creation */}
-            <div className="bg-white rounded-xl p-2 border">
-              <div className="flex items-center gap-3 font-poppins">
+            <div className="bg-white rounded-xl sm:p-2 p-1 border">
+              <div className="flex items-center sm:gap-3 font-poppins">
                 <div className="relative w-8 h-8">
                   <Image
                     src="/asset/avatar.png"
@@ -491,7 +465,7 @@ function LoungePage() {
                   onClick={handleInputClick}
                   value={postText}
                   onChange={(e) => setPostText(e.target.value)}
-                  className="flex-1 px-4 py-2 outline-none"
+                  className="sm:flex-1 w-full px-4 py-2 outline-none"
                   readOnly
                 />
               </div>

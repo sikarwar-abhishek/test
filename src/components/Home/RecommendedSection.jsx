@@ -1,6 +1,5 @@
 import { SimplePostCard } from "@/src/components/common/Cards";
 import { ChevronDown } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { recommendations } from "@/src/api/home";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import RightSection from "./RightSection";
@@ -62,7 +61,7 @@ function RecommendedSection() {
     return actionUrl.startsWith("/api/") ? "#" : actionUrl;
   };
   return (
-    <div className="flex gap-8 mt-6 overflow-auto no-scrollbar">
+    <div className="flex gap-8 flex-col md:flex-row sm:mt-6 overflow-auto no-scrollbar">
       {/* left section side */}
       <div className="flex flex-col gap-4 flex-1">
         <div className="z-20 space-y-4 p-4 rounded-2xl shadow-md text-[15px] bg-[#4676FA05]">

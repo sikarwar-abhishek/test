@@ -10,6 +10,7 @@ import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
+import { toast } from "react-toastify";
 
 function PlayChessChallenge({ challengeId, currentPuzzle }) {
   const router = useRouter();
@@ -58,6 +59,7 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
     onSuccess: (data) => {
       // Invalidate challengesList query to refresh data
       queryClient.invalidateQueries(["challengesList", challengeId]);
+      toast.success("feedback submitted successfully.");
     },
   });
 

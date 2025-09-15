@@ -65,7 +65,7 @@ function PracticePage() {
   const hasChartData = charts && Object.keys(charts).length > 0;
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
-      <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
+      <div className="relative min-h-screen sm:px-10 px-4 sm:py-6 pb-12 pt-6 flex-1 flex flex-col sm:gap-12 gap-6 bg-background">
         <HomePageHeader text={"Performance Indicator"} />
 
         {/* header */}
@@ -125,8 +125,8 @@ function PracticePage() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center flex-1 py-20">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
+          <div className="flex items-center justify-center flex-1">
+            <h2 className="text-xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
               Start Practicing to show progress
             </h2>
           </div>

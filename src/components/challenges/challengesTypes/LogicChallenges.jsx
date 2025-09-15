@@ -24,7 +24,9 @@ function LogicChallenges({ challengeId }) {
         <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
           <HomePageHeader text={"Challenges"} backBtn />
           <div className="flex items-center justify-center flex-1">
-            <p className="text-xl text-gray-500">No challenges found.</p>
+            <p className="text-xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
+              No challenges found.
+            </p>
           </div>
         </div>
       </div>
@@ -40,28 +42,28 @@ function LogicChallenges({ challengeId }) {
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
         <HomePageHeader backBtn text={name} />
 
-        <div className="flex flex-col justify-center mx-auto w-[1000px]">
-          <div className="flex max-h-44 gap-6">
+        <div className="flex flex-col justify-center  md:w-[800px] lg:w-[1000px] w-full mx-auto">
+          <div className="flex gap-2 sm:gap-6 flex-col sm:flex-row">
             <Link
               href={`/challenges/${challengeId}/leaderboard`}
-              className="relative flex-1 aspect-video max-h-44"
+              className="relative h-32 sm:flex-1 sm:min-h-44 sm:aspect-video"
             >
               <Image
                 fill
                 src={"/asset/leaderboard.png"}
                 alt="leaderboard"
-                className="w-full h-full"
+                className="w-full h-full object-contain sm:object-fill"
               />
             </Link>
             <Link
               href={`/solution/${challengeId}/previous`}
-              className="relative flex-1 max-h-44"
+              className="relative h-32 sm:flex-1 sm:min-h-44 sm:aspect-video"
             >
               <Image
                 fill
                 src={"/asset/previous-challenges.png"}
                 alt="previous challenges"
-                className="w-full h-full"
+                className="w-full h-full object-contain sm:object-fill"
               />
             </Link>
           </div>

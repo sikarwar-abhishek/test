@@ -7,6 +7,7 @@ import Icon from "../common/Icon";
 import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const puzzleDetail = puzzle.puzzleDetail || puzzle;
@@ -25,17 +26,9 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const debounceTimeoutRef = useRef(null);
   const lastActionRef = useRef(null);
 
-  console.log("Grid puzzle data:", puzzle);
-  console.log(
-    "Grid puzzle feedback:",
-    puzzle.feedback || puzzleDetail.feedback
-  );
-  console.log("Grid initial like state:", like);
-
   // Mutation for sending feedback to API
   const feedbackMutation = useMutationHandler(puzzleFeedback, {
     onSuccess: (data) => {
-      console.log("Feedback sent successfully:", data);
       // Invalidate pastChallengesDetails query to refresh data
       if (challengeId && date) {
         queryClient.invalidateQueries([
@@ -44,6 +37,7 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
           date,
         ]);
       }
+      toast.success("feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);
@@ -65,7 +59,6 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
           action: action,
         };
 
-        console.log("Sending feedback:", feedbackData);
         feedbackMutation.mutate(feedbackData);
       }, 1000); // 1 second debounce
     },
@@ -192,7 +185,6 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
       </div>
     );
   };
-  console.log(puzzleDetail);
 
   // Parse grid data - assuming it's stored as string or array
   const parseGrid = (gridData) => {

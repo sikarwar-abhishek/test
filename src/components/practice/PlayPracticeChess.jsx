@@ -41,7 +41,7 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
       submitPracticeChessAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-        console.log("Practice chess answer submitted successfully:", data);
+    
         // Extract the puzzle data from the response
         const puzzleData =
           data.puzzles && data.puzzles.length > 0 ? data.puzzles[0] : null;
@@ -59,7 +59,7 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
       alert("Please fill all the steps before submitting.");
       return;
     }
-    // console.log(trimmedMoves);
+   
     const invalidIndexes = trimmedMoves
       .map((m, i) => ({ i, valid: inputRegex.test(m) }))
       .filter((x) => !x.valid)
@@ -103,7 +103,7 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
     const { is_correct, puzzleDetail } = submissionResult;
     const user_answer = JSON.parse(puzzleDetail?.user_answer);
     const correct_answer = puzzleDetail?.solution_moves;
-    console.log(puzzleDetail)
+
     const renderUserMoves = () => {
       if (!user_answer || !Array.isArray(user_answer)) {
         return <p className="text-gray-600 font-opensans">No moves provided</p>;

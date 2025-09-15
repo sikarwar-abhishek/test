@@ -12,7 +12,7 @@ function SimplePostCard({
   showAction = true,
 }) {
   return (
-    <div className="flex items-center gap-4 p-4 border-b last:border-none">
+    <div className="flex items-center gap-4 p-2 sm:p-4 border-b last:border-none">
       <div className="w-10 h-10 z-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
         <Image
           width={40}
@@ -23,7 +23,7 @@ function SimplePostCard({
         />
       </div>
       <div className="flex-1 min-w-0 font-poppins">
-        <p className="text-foreground flex flex-col gap-2">
+        <p className="text-foreground flex flex-col gap-2 text-sm sm:text-base">
           {authorName && (
             <>
               <span className="font-semibold">{authorName}</span>
@@ -36,7 +36,7 @@ function SimplePostCard({
         {showAction && (
           <Link
             href={postUrl}
-            className="text-blue-500 hover:underline font-medium text-sm mt-1 inline-block"
+            className="text-blue-500 hover:underline font-medium text-xs sm:text-sm mt-1 inline-block"
           >
             {actionText}
           </Link>

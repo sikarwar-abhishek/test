@@ -16,7 +16,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-1 max-h-screen overflow-auto">
-      <div className="relative min-h-screen px-10 py-6 flex-1 flex flex-col gap-12 bg-background">
+      <div className="relative min-h-screen px-6 sm:px-10 py-6 flex-1 flex flex-col gap-4 sm:gap-12 bg-background">
         {/* Header */}
         <HomePageHeader text={"Home"} />
 

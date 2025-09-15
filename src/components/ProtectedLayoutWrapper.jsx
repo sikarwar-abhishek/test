@@ -2,10 +2,17 @@
 
 import SideBar from "@/src/components/common/SideBar";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
-import { getUserProfile } from "@/src/api/auth"; // Assuming this API exists
-import Spinner from "./common/Spinner";
+import { getUserProfile } from "@/src/api/auth";
+import { useEffect, useState } from "react";
+import MobileSideBar from "./common/MobileSideBar";
 
 function ProtectedLayoutWrapper({ children }) {
+  const [isMobile, setIsMobile] = useState(false);
+  // const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
   const { isLoading, error } = useQueryHandler(getUserProfile, {
     queryKey: ["user_profile"],
   });
@@ -13,8 +20,8 @@ function ProtectedLayoutWrapper({ children }) {
   if (isLoading) {
     return (
       <div className="flex">
-        <div className="w-64 h-screen bg-gray-100 animate-pulse"></div>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="w-64 hidden sm:block h-screen bg-gray-100 animate-pulse"></div>
+        <div className="flex-1 h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Loading...</p>

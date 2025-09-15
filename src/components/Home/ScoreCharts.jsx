@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../common/ui/tooltip";
+import { useEffect, useState } from "react";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -30,14 +31,26 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export function ScoreChart({ title, children, tooltip = "" }) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
   return (
-    <div className="w-full z-30 h-80 rounded-2xl shadow-sm drop-shadow-sm border p-6">
+    <div className="w-full z-30 min-h-80 h-80 rounded-2xl shadow-sm drop-shadow-sm border p-6">
       <div className="flex justify-between">
         <h3 className="text-lg font-semibold font-monserrat mb-4">{title}</h3>
-        <TooltipProvider>
-          <TextToolTip delayDuration={100}>
+        <TooltipProvider delayDuration={100}>
+          <TextToolTip
+            open={isMobile ? open : undefined}
+            onOpenChange={isMobile ? setOpen : undefined}
+          >
             <TooltipTrigger asChild>
               <CircleQuestionMark
+                onClick={() => {
+                  if (isMobile) setOpen(!open);
+                }}
                 size={20}
                 className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-200"
               />
@@ -122,7 +135,7 @@ export default function ScoreCharts({ bestPuzzleType, tooltips, charts }) {
     communityScore: communityChart,
     overallProficiency: overallProficiencyChart,
   } = charts;
-  // console.log(fitnessChart);
+
   return (
     <div className="grid sm:grid-cols-2 grid-cols-1 gap-6">
       <ScoreChart title="Fitness Score" tooltip={fitnessScore}>
@@ -134,7 +147,7 @@ export default function ScoreCharts({ bestPuzzleType, tooltips, charts }) {
       <div className="flex gap-6 sm:col-span-2">
         <ScoreChart title="Proficiency Score" tooltip={proficiencyScore}>
           <div className="w-full h-full flex flex-col sm:flex-row gap-24 sm:gap-12">
-            <div className="w-full sm:w-[calc(36dvw)] h-full font-opensans">
+            <div className="w-full sm:w-[calc(36dvw)] min-h-44 font-opensans">
               <p className="text-sm text-gray-600  -mt-4 mb-3">
                 {"Best Proficiency in Puzzle type : "}
                 <span className="font-semibold font-sans text-blue-500">
@@ -146,7 +159,7 @@ export default function ScoreCharts({ bestPuzzleType, tooltips, charts }) {
                 dataKey={"puzzleProficiency"}
               />
             </div>
-            <div className="w-full sm:w-[calc(36dvw)] h-full">
+            <div className="w-full sm:w-[calc(36dvw)] min-h-44 h-full ">
               <p className="text-sm font-opensans text-gray-600 -mt-4 mb-3">
                 {"Overall Proficiency"}
               </p>

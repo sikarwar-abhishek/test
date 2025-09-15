@@ -8,6 +8,7 @@ import { submitGridAnswer } from "@/src/api/challenges";
 import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
   const router = useRouter();
@@ -18,15 +19,12 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
   const initializeLikeState = () => {
     const feedback =
       currentPuzzle.feedback || currentPuzzle.puzzleDetail?.feedback;
-    console.log("Grid puzzle feedback:", feedback);
-    console.log("Current puzzle data:", currentPuzzle);
     if (feedback === "like") return 1;
     if (feedback === "unlike") return -1;
     return 0;
   };
 
   const [like, setLike] = useState(initializeLikeState);
-  console.log("Grid initial like state:", like);
   const debounceTimeoutRef = useRef(null);
   const lastActionRef = useRef(null);
   const [grid, setGrid] = useState(() => {
@@ -78,7 +76,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
     ({ puzzleId, answerData }) => submitGridAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-        console.log("Grid answer submitted successfully:", data);
         setIsModalOpen(true);
       },
     }
@@ -87,9 +84,9 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
   // Mutation for sending feedback to API
   const feedbackMutation = useMutationHandler(puzzleFeedback, {
     onSuccess: (data) => {
-      console.log("Feedback sent successfully:", data);
       // Invalidate challengesList query to refresh data
       queryClient.invalidateQueries(["challengesList", challengeId]);
+      toast.success("feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);
@@ -111,7 +108,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
           action: action,
         };
 
-        console.log("Sending feedback:", feedbackData);
         feedbackMutation.mutate(feedbackData);
       }, 1000); // 1 second debounce
     },
@@ -119,9 +115,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
   );
 
   const handleSubmit = () => {
-    console.log("Submit button clicked");
-    console.log("Current grid state:", grid);
-
     // Count filled cells and check for meaningful progress
     let filledCellsCount = 0;
     let validFilledCells = 0;
@@ -137,10 +130,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
         }
       }
     }
-
-    console.log("Filled cells count:", filledCellsCount);
-    console.log("Valid filled cells:", validFilledCells);
-
     // Require at least some meaningful progress (more than just 1-2 cells)
     if (filledCellsCount < 3) {
       alert(
@@ -164,9 +153,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
       }
     }
 
-    console.log("Has invalid cells:", hasInvalidCells);
-    console.log("Invalid cells:", invalidCells);
-
     if (hasInvalidCells) {
       alert(
         `Please fix the invalid cells (highlighted in red) before submitting.\nInvalid cells: ${invalidCells.join(
@@ -180,13 +166,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
     const answerData = {
       solution_grid: grid,
     };
-
-    console.log(
-      "Submitting to puzzleId:",
-      currentPuzzle.puzzleId,
-      "with data:",
-      answerData
-    );
     submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
   };
 
@@ -299,9 +278,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
 
     // Empty cells are valid
     if (!cellValue || cellValue === "" || cellValue === "0") return true;
-
-    console.log(`Validating cell (${row},${col}) with value: "${cellValue}"`);
-
     // Check row for duplicates
     for (let c = 0; c < 9; c++) {
       if (c !== col) {
@@ -312,9 +288,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
           otherValue !== "0" &&
           otherValue === cellValue
         ) {
-          console.log(
-            `Invalid cell at (${row},${col}): duplicate "${cellValue}" in row at column ${c}`
-          );
           return false;
         }
       }
@@ -330,9 +303,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
           otherValue !== "0" &&
           otherValue === cellValue
         ) {
-          console.log(
-            `Invalid cell at (${row},${col}): duplicate "${cellValue}" in column at row ${r}`
-          );
           return false;
         }
       }
@@ -351,9 +321,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
             otherValue !== "0" &&
             otherValue === cellValue
           ) {
-            console.log(
-              `Invalid cell at (${row},${col}): duplicate "${cellValue}" in 3x3 box at (${r},${c})`
-            );
             return false;
           }
         }
@@ -368,11 +335,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
     const borders = getCageBorders(row, col);
     const isValid = isCellValid(row, col);
     const cellValue = grid[row]?.[col];
-
-    // Debug logging for validation (only for invalid cells to reduce noise)
-    if (cellValue && cellValue !== "" && cellValue !== "0" && !isValid) {
-      console.log(`Invalid cell (${row},${col}) value: ${cellValue}`);
-    }
 
     let borderStyles = "border border-gray-300";
 
@@ -390,7 +352,6 @@ export default function PlayGridChallenge({ challengeId, currentPuzzle }) {
 
     // Invalid cells get red background
     if (!isValid) {
-      console.log(`Applying red background to invalid cell (${row},${col})`);
       return `${baseStyle} bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 focus:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500`; // Invalid cells
     }
 

@@ -42,7 +42,7 @@ function LeaderboardPage({ challengeId }) {
           {activeTab === "current" ? (
             <CurrentWeekLeaderboard challengeId={challengeId} />
           ) : (
-            <PreviousWeekLeaderboard />
+            <PreviousWeekLeaderboard challengeId={challengeId} />
           )}
         </div>
       </div>

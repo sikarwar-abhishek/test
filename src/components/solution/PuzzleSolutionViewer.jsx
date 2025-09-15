@@ -7,6 +7,7 @@ import Icon from "../common/Icon";
 import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const puzzleDetail = puzzle.puzzleDetail || puzzle;
@@ -26,7 +27,6 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
 
   const feedbackMutation = useMutationHandler(puzzleFeedback, {
     onSuccess: (data) => {
-      console.log("Feedback sent successfully:", data);
       // Invalidate pastChallengesDetails query to refresh data
       if (challengeId && date) {
         queryClient.invalidateQueries([
@@ -35,6 +35,7 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
           date,
         ]);
       }
+      toast.success("feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);

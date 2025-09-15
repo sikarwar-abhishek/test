@@ -9,7 +9,7 @@ import Spinner from "../../common/Spinner";
 import PastLeaderboardItem from "./PastLeaderboardItem";
 import PastLeaderboardDetail from "./PastLeaderboardDetail";
 
-function PreviousWeekLeaderboard() {
+function PreviousWeekLeaderboard({ challengeId }) {
   const [selectedLeaderboard, setSelectedLeaderboard] = useState(null);
 
   const {
@@ -20,8 +20,8 @@ function PreviousWeekLeaderboard() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["pastLeaderboard"],
-    queryFn: ({ pageParam = 1 }) => getPastLeaderboard(pageParam),
+    queryKey: ["pastLeaderboard", challengeId],
+    queryFn: ({ pageParam = 1 }) => getPastLeaderboard(challengeId, pageParam),
     getNextPageParam: (lastPage) => {
       const nextPageUrl = lastPage?.next;
       if (!nextPageUrl) return undefined;

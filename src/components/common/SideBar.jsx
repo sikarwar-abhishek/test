@@ -2,10 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
 import Icon from "./Icon";
 import { HOME_NAV } from "@/src/constants/constant";
-import { useLocalStorageState } from "@/src/hooks/useLocalStorageState";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getUserProfile } from "@/src/api/auth";
 
@@ -37,7 +35,6 @@ function NavButton({ icon, text, href }) {
   );
 }
 export default function SideBar() {
-  // const [value] = useLocalStorageState(null, "user");
   const { data, isLoading } = useQueryHandler(getUserProfile, {
     queryKey: ["user_profile"],
   });
@@ -113,12 +110,8 @@ export default function SideBar() {
               <span className="font-medium font-poppins text-sm text-black">
                 {value?.first_name} {value?.last_name}
               </span>
-              {/* <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-md font-medium">
-                Pro
-              </span> */}
             </div>
           </div>
-          {/* <ChevronRight className="ml-auto" /> */}
         </div>
       </div>
     </div>
