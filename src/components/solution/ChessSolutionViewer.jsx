@@ -36,7 +36,7 @@ function ChessSolutionViewer({ puzzle, onBack, challengeId, date }) {
           date,
         ]);
       }
-      toast.success("feedback submitted successfully.");
+      toast.success("Feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);

@@ -1,13 +1,25 @@
 "use client";
 import { Info, X, Star, Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { submitPracticeGridAnswer } from "@/src/api/practice";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
+import DOMPurify from "dompurify";
 
 export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Parse grid size from puzzleDetail
+  const getGridSize = () => {
+    const gridSizeStr = currentPuzzle.puzzleDetail.grid_size || "9,9";
+    const [rows, cols] = gridSizeStr
+      .split(",")
+      .map((num) => parseInt(num.trim()));
+    return { rows, cols };
+  };
+
+  const { rows: gridRows, cols: gridCols } = getGridSize();
 
   // Reset submission state when puzzle changes
   useEffect(() => {
@@ -16,11 +28,16 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     // Reset grid to initial state
     setGrid(
       currentPuzzle.puzzleDetail.initial_grid ||
-        Array(9)
+        Array(gridRows)
           .fill()
-          .map(() => Array(9).fill(""))
+          .map(() => Array(gridCols).fill(""))
     );
-  }, [currentPuzzle.puzzleId, currentPuzzle.puzzleDetail.initial_grid]);
+  }, [
+    currentPuzzle.puzzleId,
+    currentPuzzle.puzzleDetail.initial_grid,
+    gridRows,
+    gridCols,
+  ]);
 
   const [grid, setGrid] = useState(() => {
     // Initialize grid from puzzle data - for Killer Sudoku, initial_grid is already a 2D array
@@ -28,9 +45,9 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     if (puzzleDetail.initial_grid && Array.isArray(puzzleDetail.initial_grid)) {
       return puzzleDetail.initial_grid.map((row) => [...row]);
     }
-    return Array(9)
+    return Array(gridRows)
       .fill()
-      .map(() => Array(9).fill(""));
+      .map(() => Array(gridCols).fill(""));
   });
 
   // Get cage information
@@ -54,43 +71,6 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
       },
     }
   );
-
-  const handleSubmit = () => {
-    // Check if grid has any filled cells
-    const hasFilledCells = grid.some((row) =>
-      row.some((cell) => cell && cell !== "" && cell !== "0")
-    );
-
-    if (!hasFilledCells) {
-      alert("Please fill in at least one cell before submitting.");
-      return;
-    }
-
-    // Check if there are any invalid cells
-    let hasInvalidCells = false;
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        if (!isCellValid(row, col)) {
-          hasInvalidCells = true;
-          break;
-        }
-      }
-      if (hasInvalidCells) break;
-    }
-
-    if (hasInvalidCells) {
-      alert(
-        "Please fix the invalid cells (highlighted in red) before submitting."
-      );
-      return;
-    }
-
-    // For Killer Sudoku, send the grid as a 2D array
-    const answerData = {
-      solution_grid: grid,
-    };
-    submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
-  };
 
   const handleInfoClick = () => {
     setIsInstructionsOpen(true);
@@ -119,7 +99,7 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
   const handleCellChange = (row, col, value) => {
     // Only allow changes to non-initial cells
     if (isInitialCell(row, col)) return;
-
+    console.log(value);
     // Use the allowed input regex from puzzle details
     if (value !== "" && !allowedInputRegex.test(value)) return;
 
@@ -154,6 +134,33 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     }
   };
 
+  const handleNumericInput = (row, col, e) => {
+    if (isInitialCell(row, col)) return;
+
+    const raw = e.target.value;
+    const value = raw.trim().slice(-1);
+
+    if (allowedInputRegex.test(value)) {
+      setGrid((prevGrid) => {
+        const newGrid = [...prevGrid];
+        newGrid[row] = [...newGrid[row]];
+        newGrid[row][col] = value;
+        return newGrid;
+      });
+    } else if (value === "") {
+      // allow clearing
+      setGrid((prevGrid) => {
+        const newGrid = [...prevGrid];
+        newGrid[row] = [...newGrid[row]];
+        newGrid[row][col] = "";
+        return newGrid;
+      });
+    } else {
+      // disallow invalid character
+      e.preventDefault();
+    }
+  };
+
   // Get cage superscript for a cell
   const getCageSuperscript = (row, col) => {
     const cellKey = `${row}_${col}`;
@@ -167,37 +174,57 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     return cageBorders[cellKey] || [];
   };
 
-  // Check if a cell value is valid (no duplicates in row, column, or 3x3 box)
-  const isCellValid = (row, col) => {
-    const value = grid[row][col];
-    if (!value || value === "" || value === "0") return true; // Empty cells are valid
+  // Check if a cell value is valid (no duplicates in row, column, or box)
+  const isCellValid = useCallback(
+    (row, col) => {
+      const isKenken = /kenken/i.test(currentPuzzle.title);
+      const value = grid?.[row]?.[col];
+      if (!value || value === "" || value === "0") return true; // Empty cells are valid
 
-    // Check row for duplicates
-    for (let c = 0; c < 9; c++) {
-      if (c !== col && grid[row][c] === value) return false;
-    }
-
-    // Check column for duplicates
-    for (let r = 0; r < 9; r++) {
-      if (r !== row && grid[r][col] === value) return false;
-    }
-
-    // Check 3x3 box for duplicates
-    const boxRow = Math.floor(row / 3) * 3;
-    const boxCol = Math.floor(col / 3) * 3;
-    for (let r = boxRow; r < boxRow + 3; r++) {
-      for (let c = boxCol; c < boxCol + 3; c++) {
-        if ((r !== row || c !== col) && grid[r][c] === value) return false;
+      // Check row for duplicates
+      for (let c = 0; c < gridCols; c++) {
+        if (c !== col && grid[row][c] === value) return false;
       }
-    }
 
-    return true;
-  };
+      // Check column for duplicates
+      for (let r = 0; r < gridRows; r++) {
+        if (r !== row && grid[r][col] === value) return false;
+      }
+
+      // Check box for duplicates - calculate box dimensions
+      let boxRows, boxCols;
+      if (!isKenken) {
+        if (gridRows === 6 && gridCols === 6) {
+          boxRows = 2;
+          boxCols = 3;
+        } else if (gridRows === 9 && gridCols === 9) {
+          boxRows = 3;
+          boxCols = 3;
+        } else if (gridRows === 4 && gridCols === 4) {
+          boxRows = 2;
+          boxCols = 2;
+        } else {
+          boxRows = boxCols = Math.floor(Math.sqrt(gridRows));
+        }
+
+        const boxRow = Math.floor(row / boxRows) * boxRows;
+        const boxCol = Math.floor(col / boxCols) * boxCols;
+
+        for (let r = boxRow; r < boxRow + boxRows && r < gridRows; r++) {
+          for (let c = boxCol; c < boxCol + boxCols && c < gridCols; c++) {
+            if ((r !== row || c !== col) && grid[r][c] === value) return false;
+          }
+        }
+      }
+      return true;
+    },
+    [currentPuzzle.title, grid, gridCols, gridRows]
+  );
 
   // Check if there are any invalid cells in the grid
   const hasInvalidCells = () => {
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < gridRows; row++) {
+      for (let col = 0; col < gridCols; col++) {
         if (!isCellValid(row, col)) {
           return true;
         }
@@ -206,10 +233,56 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     return false;
   };
 
+  const handleSubmit = useCallback(() => {
+    // Check if grid has any filled cells
+    const hasFilledCells = grid.some((row) =>
+      row.some((cell) => cell && cell !== "" && cell !== "0")
+    );
+
+    if (!hasFilledCells) {
+      alert("Please fill in at least one cell before submitting.");
+      return;
+    }
+
+    // Check if there are any invalid cells
+    let hasInvalidCells = false;
+    for (let row = 0; row < gridRows; row++) {
+      for (let col = 0; col < gridCols; col++) {
+        if (!isCellValid(row, col)) {
+          hasInvalidCells = true;
+          break;
+        }
+      }
+      if (hasInvalidCells) break;
+    }
+
+    // if (hasInvalidCells) {
+    //   alert(
+    //     "Please fix the invalid cells (highlighted in red) before submitting."
+    //   );
+    //   return;
+    // }
+
+    // For Killer Sudoku, send the grid as a 2D array
+    const answerData = {
+      solution_grid: grid,
+    };
+    submitMutation.mutate({ puzzleId: currentPuzzle.puzzleId, answerData });
+  }, [
+    grid,
+    gridRows,
+    gridCols,
+    isCellValid,
+    submitMutation,
+    currentPuzzle.puzzleId,
+  ]);
+
   // Get cell styling with cage borders and validation
   const getCellStyle = (row, col) => {
     const borders = getCageBorders(row, col);
     const isValid = isCellValid(row, col);
+    const cellValue = grid[row]?.[col];
+
     let borderStyles = "border border-gray-300";
 
     // Apply cage borders - use thick black borders for cage boundaries
@@ -218,18 +291,113 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     if (borders.includes("L")) borderStyles += " border-l-2 border-l-black";
     if (borders.includes("R")) borderStyles += " border-r-2 border-r-black";
 
-    const baseStyle = `w-10 h-10 ${borderStyles} flex items-center justify-center text-base font-semibold text-center relative`;
+    // Responsive: flex-1 makes cells divide screen width equally on mobile
+    const sizeClasses = "flex-1 aspect-square max-w-[50px]";
+    const textClasses = "text-base sm:text-lg md:text-xl lg:text-2xl";
+
+    const baseStyle = `${sizeClasses} ${borderStyles} flex items-center justify-center ${textClasses} font-semibold text-center relative`;
 
     if (isInitialCell(row, col)) {
-      return `${baseStyle} bg-gray-100 text-gray-800 cursor-not-allowed`; // Initial puzzle cells
+      return `${baseStyle} bg-gray-100 text-gray-800 cursor-not-allowed`;
     }
 
-    // Invalid cells get red background
     if (!isValid) {
-      return `${baseStyle} bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 focus:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500`; // Invalid cells
+      return `${baseStyle} bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 focus:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500`;
     }
 
-    return `${baseStyle} bg-white text-gray-800 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500`; // Valid editable cells
+    return `${baseStyle} bg-white text-gray-800 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500`;
+  };
+
+  // Render a solution grid with comparison highlighting incorrect cells
+  const renderSolutionGridWithComparison = (
+    gridData,
+    title,
+    userGrid,
+    correctGrid
+  ) => {
+    let parsedGrid = gridData;
+
+    // Parse grid data if it's not already a 2D array
+    if (typeof gridData === "string") {
+      const chars = gridData.split("");
+      parsedGrid = [];
+      for (let i = 0; i < gridRows; i++) {
+        parsedGrid.push(chars.slice(i * gridCols, (i + 1) * gridCols));
+      }
+    } else if (!Array.isArray(gridData) || !gridData) {
+      parsedGrid = Array(gridRows)
+        .fill()
+        .map(() => Array(gridCols).fill(""));
+    }
+
+    if (!parsedGrid || parsedGrid.length !== gridRows) {
+      parsedGrid = Array(gridRows)
+        .fill()
+        .map(() => Array(gridCols).fill(""));
+    }
+
+    return (
+      <div className="inline-block">
+        <div className="text-xs text-gray-500 text-center mb-2">{title}</div>
+        <div className="inline-block border border-gray-400">
+          {Array.from({ length: gridRows }, (_, row) => (
+            <div key={row} className="flex">
+              {Array.from({ length: gridCols }, (_, col) => {
+                const cellValue =
+                  parsedGrid[row] && parsedGrid[row][col] !== undefined
+                    ? parsedGrid[row][col]
+                    : "";
+                const displayValue =
+                  cellValue === "" || cellValue === "0" || cellValue === 0
+                    ? ""
+                    : String(cellValue);
+                const superscript = getCageSuperscript(row, col);
+                const borders = getCageBorders(row, col);
+
+                let borderStyles = "border border-gray-300";
+                if (borders.includes("U"))
+                  borderStyles += " border-t-2 border-t-black";
+                if (borders.includes("B"))
+                  borderStyles += " border-b-2 border-b-black";
+                if (borders.includes("L"))
+                  borderStyles += " border-l-2 border-l-black";
+                if (borders.includes("R"))
+                  borderStyles += " border-r-2 border-r-black";
+
+                // Check if cell is incorrect
+                const isCorrect = isCellCorrect(
+                  row,
+                  col,
+                  userGrid,
+                  correctGrid
+                );
+                const bgColor = isCorrect
+                  ? "bg-white text-gray-800"
+                  : "bg-red-400 text-black";
+
+                const sizeClasses =
+                  "w-12 h-12 sm:w-10 sm:h-10 md:w-[50px] md:h-[50px]";
+                const textClasses =
+                  "text-sm sm:text-base md:text-lg lg:text-xl";
+                const baseStyle = `${sizeClasses} ${borderStyles} flex items-center justify-center ${textClasses} font-semibold relative ${bgColor}`;
+                return (
+                  <div key={col} className={`${baseStyle}`}>
+                    {superscript && (
+                      <div className="absolute top-0.5 left-0.5 text-xs font-poppins sm:text-[13px] text-blue-600 font-bold leading-none">
+                        {superscript}
+                      </div>
+                    )}
+                    <span className="font-semibold text-base">
+                      {displayValue}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // Render a solution grid (read-only, smaller size)
@@ -241,30 +409,30 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
       // If it's a string, convert to 2D array
       const chars = gridData.split("");
       parsedGrid = [];
-      for (let i = 0; i < 9; i++) {
-        parsedGrid.push(chars.slice(i * 9, (i + 1) * 9));
+      for (let i = 0; i < gridRows; i++) {
+        parsedGrid.push(chars.slice(i * gridCols, (i + 1) * gridCols));
       }
     } else if (!Array.isArray(gridData) || !gridData) {
       // If no valid grid data, return empty grid display
-      parsedGrid = Array(9)
+      parsedGrid = Array(gridRows)
         .fill()
-        .map(() => Array(9).fill(""));
+        .map(() => Array(gridCols).fill(""));
     }
 
-    // Ensure we have a valid 9x9 grid
-    if (!parsedGrid || parsedGrid.length !== 9) {
-      parsedGrid = Array(9)
+    // Ensure we have a valid grid with correct dimensions
+    if (!parsedGrid || parsedGrid.length !== gridRows) {
+      parsedGrid = Array(gridRows)
         .fill()
-        .map(() => Array(9).fill(""));
+        .map(() => Array(gridCols).fill(""));
     }
 
     return (
       <div className="inline-block">
         <div className="text-xs text-gray-500 text-center mb-2">{title}</div>
         <div className="inline-block border border-gray-400">
-          {Array.from({ length: 9 }, (_, row) => (
+          {Array.from({ length: gridRows }, (_, row) => (
             <div key={row} className="flex">
-              {Array.from({ length: 9 }, (_, col) => {
+              {Array.from({ length: gridCols }, (_, col) => {
                 // Handle both string and number values
                 const cellValue =
                   parsedGrid[row] && parsedGrid[row][col] !== undefined
@@ -287,17 +455,21 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
                 if (borders.includes("R"))
                   borderStyles += " border-r-2 border-r-black";
 
+                const sizeClasses =
+                  "w-12 h-12 sm:w-10 sm:h-10 md:w-[50px] md:h-[50px]";
+                const textClasses =
+                  "text-sm sm:text-base md:text-lg lg:text-xl";
+                const baseStyle = `${sizeClasses} ${borderStyles} flex items-center justify-center ${textClasses} font-semibold relative`;
                 return (
-                  <div
-                    key={col}
-                    className={`w-6 h-6 ${borderStyles} flex items-center justify-center text-xs font-semibold text-center relative bg-white text-gray-800`}
-                  >
+                  <div key={col} className={`${baseStyle}`}>
                     {superscript && (
-                      <div className="absolute top-0 left-0 text-[8px] text-blue-600 font-bold leading-none">
+                      <div className="absolute top-0.5 left-0.5 text-xs sm:text-[13px] font-poppins text-blue-600 font-bold leading-none">
                         {superscript}
                       </div>
                     )}
-                    <span>{displayValue}</span>
+                    <span className="font-semibold text-base">
+                      {displayValue}
+                    </span>
                   </div>
                 );
               })}
@@ -314,22 +486,47 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     setIsSubmitted(false);
     // Reset grid to initial state
     setGrid(
-      Array(9)
+      Array(gridRows)
         .fill()
-        .map(() => Array(9).fill(""))
+        .map(() => Array(gridCols).fill(""))
     );
     onSubmitSuccess(submissionResult);
+  };
+
+  // Parse grid data helper
+  const parseGridData = (gridData) => {
+    if (typeof gridData === "string") {
+      const chars = gridData.split("");
+      const parsedGrid = [];
+      for (let i = 0; i < gridRows; i++) {
+        parsedGrid.push(chars.slice(i * gridCols, (i + 1) * gridCols));
+      }
+      return parsedGrid;
+    }
+    return Array.isArray(gridData)
+      ? gridData
+      : Array(gridRows)
+          .fill()
+          .map(() => Array(gridCols).fill(""));
+  };
+
+  // Check if user's answer matches correct answer for a cell
+  const isCellCorrect = (row, col, userGrid, correctGrid) => {
+    if (!userGrid[row] || !correctGrid[row]) return false;
+    return (
+      userGrid[row][col] == correctGrid[row][col] || userGrid[row][col] === ""
+    );
   };
 
   // Render solution feedback similar to past challenges
   const renderSolutionFeedback = () => {
     if (!isSubmitted || !submissionResult) return null;
 
-    const { is_correct, puzzleDetail } = submissionResult;
+    const { correct, puzzleDetail } = submissionResult;
     const user_answer_grid = puzzleDetail?.user_answer_grid;
     const solution_grid = puzzleDetail?.solution_grid;
 
-    if (is_correct) {
+    if (correct) {
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -371,6 +568,9 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
         </div>
       );
     } else {
+      const userGrid = parseGridData(user_answer_grid);
+      const correctGrid = parseGridData(solution_grid);
+
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -384,7 +584,12 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
                 Your Solution :
               </h3>
               <div className="flex justify-center">
-                {renderSolutionGrid(user_answer_grid, "")}
+                {renderSolutionGridWithComparison(
+                  user_answer_grid,
+                  "",
+                  userGrid,
+                  correctGrid
+                )}
               </div>
             </div>
           )}
@@ -412,7 +617,7 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
 
   // Instructions Popup Component
   const InstructionsPopup = () => {
-    const { instruction, difficultyLevel } = currentPuzzle;
+    const { instruction, description, difficultyLevel } = currentPuzzle;
     const maxStars = 5;
 
     return (
@@ -468,28 +673,27 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
             <div className="text-left space-y-4">
               <div>
                 <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
+                  DESCRIPTION
+                </h4>
+                <div className="text-[#757575] text-sm font-opensans leading-relaxed">
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(description),
+                    }}
+                  ></span>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
                   INSTRUCTIONS
                 </h4>
                 <div className="text-[#757575] text-sm font-opensans leading-relaxed">
-                  {instruction}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(instruction),
+                    }}
+                  ></span>
                 </div>
-              </div>
-
-              {/* Benefits Section */}
-              <div>
-                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
-                  BENEFITS
-                </h4>
-                <ul className="space-y-3 text-[#757575] text-sm font-opensans list-disc pl-5">
-                  <li>
-                    Working on a puzzle reinforces connections between brain
-                    cells.
-                  </li>
-                  <li>
-                    Improves mental speed and is an effective way to improve
-                    short-term memory.
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
@@ -498,13 +702,13 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
     );
   };
 
-  // Render a 9x9 Killer Sudoku grid
+  // Render a Sudoku grid with dynamic size
   const renderGrid = () => (
     <div className="flex justify-center">
       <div className="inline-block">
-        {Array.from({ length: 9 }, (_, row) => (
+        {Array.from({ length: gridRows }, (_, row) => (
           <div key={row} className="flex">
-            {Array.from({ length: 9 }, (_, col) => {
+            {Array.from({ length: gridCols }, (_, col) => {
               const value = grid[row] && grid[row][col] ? grid[row][col] : "";
               const displayValue = value === "0" ? "" : value;
               const superscript = getCageSuperscript(row, col);
@@ -512,19 +716,19 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
               return (
                 <div key={col} className={getCellStyle(row, col)}>
                   {superscript && (
-                    <div className="absolute top-0.5 left-0.5 text-[10px] text-blue-600 font-bold leading-none">
+                    <div className="absolute top-0.5 left-0.5 text-xs sm:text-sm text-blue-600 font-bold leading-none">
                       {superscript}
                     </div>
                   )}
                   <input
                     type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     value={displayValue}
-                    onChange={(e) => handleCellChange(row, col, e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(row, col, e)}
+                    onInput={(e) => handleNumericInput(row, col, e)}
                     onFocus={(e) => e.target.select()}
-                    className="w-full h-full text-center bg-transparent border-none outline-none text-base font-semibold"
-                    maxLength="1"
-                    disabled={isInitialCell(row, col)}
+                    className="focus:bg-blue-100 cursor-pointer w-full h-full text-center bg-transparent border-none outline-none text-base font-semibold"
+                    disabled={isInitialCell(row, col) || isSubmitted}
                   />
                 </div>
               );
@@ -534,6 +738,17 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
       </div>
     </div>
   );
+
+  useEffect(() => {
+    function handleEnterKey(e) {
+      const { key } = e;
+      if (key === "Enter" && !isSubmitted) {
+        handleSubmit();
+      }
+    }
+    window.addEventListener("keydown", handleEnterKey);
+    return () => window.removeEventListener("keydown", handleEnterKey);
+  }, [handleSubmit, isSubmitted]);
 
   return (
     <div>
@@ -556,10 +771,24 @@ export default function PlayPracticeGrid({ currentPuzzle, onSubmitSuccess }) {
             onClick={handleSubmit}
             disabled={
               submitMutation.isPending ||
-              !grid.some((row) =>
-                row.some((cell) => cell && cell !== "" && cell !== "0")
-              ) ||
-              hasInvalidCells()
+              (() => {
+                let filledCount = 0;
+                for (let row = 0; row < gridRows; row++) {
+                  for (let col = 0; col < gridCols; col++) {
+                    const cellValue = String(grid[row]?.[col] || "").trim();
+                    console.log(cellValue);
+                    if (
+                      cellValue &&
+                      cellValue !== "" &&
+                      cellValue !== "0" &&
+                      !isInitialCell(row, col)
+                    ) {
+                      filledCount++;
+                    }
+                  }
+                }
+                return filledCount < 1;
+              })()
             }
             className="py-2 px-16 sm:py-2 self-center sm:px-32 rounded-lg gap-2 sm:gap-4 border border-transparent font-poppins font-bold flex items-center justify-center text-lg
               bg-blue-500 text-white transition-all duration-300 ease-in-out

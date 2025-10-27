@@ -3,7 +3,7 @@ import { Info, X, Star, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { submitPracticeSubjectiveAnswer } from "@/src/api/practice";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
-
+import DOMPurify from "dompurify";
 export default function PlayPracticeSubjective({
   currentPuzzle,
   onSubmitSuccess,
@@ -25,7 +25,6 @@ export default function PlayPracticeSubjective({
       submitPracticeSubjectiveAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-       
         // Extract the puzzle data from the response
         const puzzleData =
           data.puzzles && data.puzzles.length > 0 ? data.puzzles[0] : null;
@@ -59,7 +58,7 @@ export default function PlayPracticeSubjective({
 
   // Instructions Popup Component
   const InstructionsPopup = () => {
-    const { instruction, difficultyLevel } = currentPuzzle;
+    const { instruction, description, difficultyLevel } = currentPuzzle;
     const maxStars = 5;
 
     return (
@@ -115,28 +114,27 @@ export default function PlayPracticeSubjective({
             <div className="text-left space-y-4">
               <div>
                 <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
+                  DESCRIPTION
+                </h4>
+                <div className="text-[#757575] text-sm font-opensans leading-relaxed">
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(description),
+                    }}
+                  ></span>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
                   INSTRUCTIONS
                 </h4>
                 <div className="text-[#757575] text-sm font-opensans leading-relaxed">
-                  {instruction}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(instruction),
+                    }}
+                  ></span>
                 </div>
-              </div>
-
-              {/* Benefits Section */}
-              <div>
-                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
-                  BENEFITS
-                </h4>
-                <ul className="space-y-3 text-[#757575] text-sm font-opensans list-disc pl-5">
-                  <li>
-                    Working on a puzzle reinforces connections between brain
-                    cells.
-                  </li>
-                  <li>
-                    Improves mental speed and is an effective way to improve
-                    short-term memory.
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
@@ -157,11 +155,11 @@ export default function PlayPracticeSubjective({
   const renderSolutionFeedback = () => {
     if (!isSubmitted || !submissionResult) return null;
 
-    const { is_correct, puzzleDetail } = submissionResult;
+    const { correct, puzzleDetail } = submissionResult;
     const user_answer = puzzleDetail?.user_answer;
     const correct_answer = puzzleDetail?.correct_answer;
 
-    if (is_correct) {
+    if (correct) {
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -240,7 +238,14 @@ export default function PlayPracticeSubjective({
 
         <div className="border-4 rounded-lg border-[#4676FA] border-opacity-20 p-6 font-poppins font-semibold">
           <span className="text-2xl underline mb-2 block">Question</span>
-          <p className="text-2xl">{currentPuzzle.puzzleDetail.description}</p>
+          <p
+            className="text-2xl"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(
+                currentPuzzle.puzzleDetail.description
+              ),
+            }}
+          ></p>
         </div>
 
         {!isSubmitted ? (

@@ -9,21 +9,24 @@ import { Trash } from "lucide-react";
 export default function DeletePopup({ isOpen, onClose, onConfirm }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-xl mx-4 p-10 text-center bg-white rounded-3xl border-0 shadow-2xl">
+      <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[calc(100dvw-2rem)] sm:max-w-xl sm:mx-4 mx-auto sm:p-10 p-4 text-center bg-white rounded-xl border-0 shadow-2xl">
         <DialogTitle className="sr-only">Delete Confirmation</DialogTitle>
 
         {/* Logout Icon */}
         <div className="flex justify-center ">
-          <Trash className="w-16 h-16 text-red-500" strokeWidth={2} />
+          <Trash
+            className="sm:w-16 sm:h-16 w-8 h-8 text-red-500"
+            strokeWidth={2}
+          />
         </div>
 
         {/* Main Question */}
-        <h2 className="font-poppins font-normal text-3xl text-black">
+        <h2 className="font-poppins font-normal sm:text-3xl text-2xl text-black">
           Delete?
         </h2>
 
         {/* Warning Message */}
-        <p className="font-poppins text-gray-400 text-base leading-relaxed px-2">
+        <p className="font-poppins text-gray-400 sm:text-base text-sm leading-relaxed px-2">
           Are you sure you want to delete this post?
         </p>
 
@@ -31,13 +34,13 @@ export default function DeletePopup({ isOpen, onClose, onConfirm }) {
         <div className="flex gap-4">
           <Button
             variant="outline"
-            className="flex-1 py-6 font-poppins font-normal text-lg text-gray-400 bg-white border-2 border-gray-200 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+            className="flex-1 sm:py-6 py-4 font-poppins font-normal text-lg text-gray-400 bg-white border-2 border-gray-200 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
             onClick={onClose}
           >
             Cancel
           </Button>
           <Button
-            className="flex-1 py-6 font-poppins font-bold text-lg bg-[#4676FA] hover:bg-[#3B6BD6] text-white rounded-2xl transition-all duration-200 shadow-lg"
+            className="flex-1 sm:py-6 py-4 font-poppins font-bold text-lg bg-[#4676FA] hover:bg-[#3B6BD6] text-white rounded-2xl transition-all duration-200 shadow-lg"
             onClick={onConfirm}
           >
             Confirm

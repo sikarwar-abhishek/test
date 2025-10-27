@@ -66,7 +66,11 @@ function ViewPastPuzzles({ challengeId, date }) {
   const handlePuzzleClick = (puzzle) => {
     // Handle subjective, grid, and chess puzzles
     const puzzleType = puzzle.type?.toLowerCase();
-    if (puzzleType === "subjective" || puzzleType === "grid" || puzzleType === "chess") {
+    if (
+      puzzleType === "subjective" ||
+      puzzleType === "grid" ||
+      puzzleType === "chess"
+    ) {
       setSelectedPuzzle(puzzle);
     }
   };
@@ -75,7 +79,12 @@ function ViewPastPuzzles({ challengeId, date }) {
     setSelectedPuzzle(null);
   };
 
-  if (isLoading) return <Spinner />;
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex-1 place-content-center">
+        <Spinner />
+      </div>
+    );
   if (error) {
     return (
       <div className="flex flex-1 max-h-screen overflow-auto">
@@ -162,19 +171,19 @@ function ViewPastPuzzles({ challengeId, date }) {
                       className="flex flex-col items-center"
                     >
                       {/* Progress Icon - aligned with puzzle card height */}
-                      <div className="flex items-center h-12 sm:h-16">
+                      <div className="flex items-center h-[50px] sm:h-[65px]">
                         <div
                           className={`w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transform ${
                             puzzle.is_submitted
-                              ? "bg-green-500 text-white scale-110"
-                              : "bg-blue-500 text-white hover:scale-105"
+                              ? "bg-green-500 text-white"
+                              : "bg-blue-500 text-white"
                           }`}
                         >
                           <div className="">
                             {puzzle.is_submitted ? (
                               <Check className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                             ) : (
-                              <Play className="w-2.5 h-2.5 sm:w-4 sm:h-4 fill-white transition-transform duration-200 hover:scale-110" />
+                              <Play className="w-2.5 h-2.5 sm:w-4 sm:h-4 fill-white transition-transform duration-200" />
                             )}
                           </div>
                         </div>
@@ -182,7 +191,7 @@ function ViewPastPuzzles({ challengeId, date }) {
 
                       {/* Connecting Line */}
                       {index < puzzles.length - 1 && (
-                        <div className="h-2 sm:h-3 w-0.5 border-l-2 border-blue-400" />
+                        <div className="h-2 sm:h-3 w-0.5 border-l-2 border-dashed border-blue-200" />
                       )}
                     </div>
                   ))}

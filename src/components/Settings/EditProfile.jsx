@@ -13,15 +13,13 @@ import { getUserProfile, updateProfile } from "@/src/api/auth";
 import { getAllTrainingGoals } from "@/src/api/practice";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
-import { AVAILABLE_JOBPROFILES, LOCATIONS } from "@/src/constants/constant";
+import {
+  AVAILABLE_JOBPROFILES,
+} from "@/src/constants/constant";
+import SearchableCountryCodeDropdown from "../common/SearchableCountryCodeDropdown";
 import Link from "next/link";
-
-const cities = LOCATIONS;
-
 function EditProfile({ onBack }) {
   const queryClient = useQueryClient();
-  const [locationQuery, setLocationQuery] = useState("");
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [jobProfileQuery, setJobProfileQuery] = useState("");
   const [showJobProfileDropdown, setShowJobProfileDropdown] = useState(false);
   const { data: userData } = useQueryHandler(getUserProfile, {
@@ -41,7 +39,7 @@ function EditProfile({ onBack }) {
       errorMessage: "Login failed. Please try again.",
       onSuccess: async (response) => {
         if (response) {
-          toast.success("profile updated successfully!");
+          toast.success("Profile Updated Successfully!");
           queryClient.invalidateQueries(["user_profile"]);
         }
       },
@@ -50,40 +48,46 @@ function EditProfile({ onBack }) {
 
   const defaultValues = {
     email: data.email,
+    country_code: data?.country_code ?? '',
     phone_number: data.phone_number,
     first_name: data.first_name,
     last_name: data.last_name,
-    DOB: data.DOB,
+    age: data.age,
     gender: data.gender,
     job_profile: data.job_profile,
     goals: data.goals,
-    location: data.location,
   };
   // Form setup with default values
   const form = useForm({
     defaultValues,
   });
 
-  const { register, control, handleSubmit, formState, setValue, watch } = form;
-  const { errors } = formState;
+  const { register, control, handleSubmit, formState, setValue, watch, trigger } = form;
+  const { errors, isValid } = formState;
 
-  // Initialize query states when data loads
+  // Initialize query states when data loads and validate job profile
   useEffect(() => {
     if (data) {
-      setLocationQuery(data.location || "");
       setJobProfileQuery(data.job_profile || "");
+
+      // Check if job profile from default value exists in available profiles
+      if (data.job_profile && !AVAILABLE_JOBPROFILES.includes(data.job_profile)) {
+        // If job profile is not in the list, clear it
+        setValue("job_profile", "");
+        setJobProfileQuery("");
+      }
     }
-  }, [data]);
+  }, [data, setValue]);
 
   // Prepare options for goals dropdown
   const goalOptions =
     goals?.map((goal) => ({ value: goal.id, label: goal.name })) || [];
 
   // Filter cities for location dropdown
-  const filteredCities =
-    cities?.filter((city) =>
-      city.toLowerCase().includes(locationQuery.toLowerCase())
-    ) || [];
+  // const filteredCities =
+  //   cities?.filter((city) =>
+  //     city.toLowerCase().includes(locationQuery.toLowerCase())
+  //   ) || [];
 
   const filteredJobProfiles =
     AVAILABLE_JOBPROFILES?.filter((profile) =>
@@ -94,12 +98,7 @@ function EditProfile({ onBack }) {
     update(data);
   };
 
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    }
-  };
-
+  // console.log(watch("phone_number"), watch("country_code"));
   return (
     <div className="">
       {/* Header */}
@@ -107,7 +106,7 @@ function EditProfile({ onBack }) {
         Edit Profile
       </h1>
 
-      <Form onSubmit={handleSubmit(onSubmit)} className="">
+      <Form onSubmit={handleSubmit(onSubmit)} className="mb-12 sm:mb-0">
         <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6 sm:mb-6">
           <FormRow error={errors?.first_name?.message}>
             <input
@@ -117,6 +116,11 @@ function EditProfile({ onBack }) {
               className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
               {...register("first_name", {
                 required: "Please Enter Your First Name!",
+                validate: (value) => {
+                  if (value.length > 50) return "First name must be 50 characters or less";
+                  return true;
+                },
+                onChange: () => trigger("first_name"),
               })}
             />
           </FormRow>
@@ -129,6 +133,11 @@ function EditProfile({ onBack }) {
               className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
               {...register("last_name", {
                 required: "Please Enter Your Last Name!",
+                validate: (value) => {
+                  if (value.length > 50) return "Last name must be 50 characters or less";
+                  return true;
+                },
+                onChange: () => trigger("last_name"),
               })}
             />
           </FormRow>
@@ -145,7 +154,65 @@ function EditProfile({ onBack }) {
             />
           </FormRow>
 
-          <FormRow error={errors?.DOB?.message}>
+          <FormRow
+            error={
+              errors?.phone_number?.message || errors?.country_code?.message
+            }
+          >
+            <div className="flex gap-2">
+              {/* Country Code Dropdown */}
+              <Controller
+                name="country_code"
+                control={control}
+                rules={{
+                  required: "Please select country code!",
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <SearchableCountryCodeDropdown
+                    value={value}
+                    onChange={(newValue) => {
+                      onChange(newValue);
+                      // Trigger validation when country code changes
+                      trigger("country_code");
+                    }}
+                    disabled={isUpdating}
+                    placeholder="+91"
+                    className="focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2]"
+                  />
+                )}
+              />
+
+              {/* Phone Number Input */}
+              <input
+                id="phone_number"
+                type="tel"
+                disabled={isUpdating}
+                placeholder="Enter phone number"
+                className="w-full max-w-md sm:max-w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
+                {...register("phone_number", {
+                  required: "Please Enter Your Phone Number!",
+                  validate: (value) => {
+                    // after 17 digit trim phone number to contain only 17 digit
+                    if (value.length > 17) {
+                      setValue("phone_number", value.slice(0, 17));
+                      return true;
+                    }
+                    if (value.length < 4)
+                      return "Minimum 4 digits required!";
+                    return true;
+                  },
+                })}
+                onInput={(e) => {
+                  // Allow only numbers
+                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                  // Trigger validation when phone number changes
+                  trigger("phone_number");
+                }}
+              />
+            </div>
+          </FormRow>
+
+          {/* <FormRow error={errors?.DOB?.message}>
             <Controller
               name="DOB"
               control={control}
@@ -166,7 +233,7 @@ function EditProfile({ onBack }) {
                 />
               )}
             />
-          </FormRow>
+          </FormRow> */}
         </div>
 
         {/* Third Row - Gender and Location */}
@@ -178,6 +245,7 @@ function EditProfile({ onBack }) {
                 className="w-full px-4 py-3 pr-12 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                 {...register("gender", {
                   required: "Please specify your gender!",
+                  onChange: () => trigger("gender"),
                 })}
               >
                 <option value="" disabled>
@@ -191,7 +259,7 @@ function EditProfile({ onBack }) {
             </div>
           </FormRow>
 
-          <FormRow error={errors?.location?.message}>
+          {/* <FormRow error={errors?.location?.message}>
             <div className="relative">
               <Controller
                 name="location"
@@ -266,11 +334,7 @@ function EditProfile({ onBack }) {
                 }}
               />
             </div>
-          </FormRow>
-        </div>
-
-        {/* Fourth Row - Job Profile and Goals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6">
+          </FormRow> */}
           <FormRow error={errors?.job_profile?.message}>
             <div className="relative">
               <Controller
@@ -278,6 +342,9 @@ function EditProfile({ onBack }) {
                 control={control}
                 rules={{
                   validate: (value) => {
+                    if (!value) {
+                      return "Please select a job profile!";
+                    }
                     if (value && !AVAILABLE_JOBPROFILES.includes(value)) {
                       return "Please select a valid job profile from the list";
                     }
@@ -293,7 +360,7 @@ function EditProfile({ onBack }) {
                       <input
                         id={name}
                         type="text"
-                        placeholder="Job profile"
+                        placeholder="Job profile*"
                         disabled={isUpdating}
                         value={displayValue}
                         onChange={(e) => {
@@ -306,20 +373,24 @@ function EditProfile({ onBack }) {
                           ) {
                             onChange(inputValue);
                           }
-                          setShowJobProfileDropdown(inputValue.length > 0);
+                          setShowJobProfileDropdown(true);
+                          // Trigger validation when job profile changes
+                          trigger("job_profile");
                         }}
                         onFocus={() => {
-                          const currentValue =
-                            jobProfileQuery !== ""
-                              ? jobProfileQuery
-                              : value || "";
-                          if (currentValue.length > 0) {
-                            setShowJobProfileDropdown(true);
-                          }
+                          // const currentValue =
+                          //   jobProfileQuery !== ""
+                          //     ? jobProfileQuery
+                          //     : value || "";
+                          // if (currentValue.length > 0) {
+                          setShowJobProfileDropdown(true);
+                          // }
                         }}
                         onBlur={() => {
                           setJobProfileQuery("");
                           setShowJobProfileDropdown(false);
+                          // Trigger validation when field loses focus
+                          trigger("job_profile");
                         }}
                         className="w-full px-4 py-3 font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -334,6 +405,8 @@ function EditProfile({ onBack }) {
                                   onChange(profile);
                                   setJobProfileQuery(profile);
                                   setShowJobProfileDropdown(false);
+                                  // Trigger validation when job profile is selected
+                                  trigger("job_profile");
                                 }}
                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-poppins text-sm"
                               >
@@ -347,6 +420,40 @@ function EditProfile({ onBack }) {
                 }}
               />
             </div>
+          </FormRow>
+        </div>
+
+        {/* Fourth Row - Job Profile and Goals */}
+        <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6">
+          <FormRow error={errors?.age?.message}>
+            <input
+              id="age"
+              disabled={isUpdating}
+              type="number"
+              placeholder="Enter Age*"
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                if (e.target.value.length > 2) {
+                  e.target.value = e.target.value.slice(0, 2);
+                }
+                if (e.target.value == 0) {
+                  e.target.value = "";
+                }
+                // Trigger validation when age changes
+                trigger("age");
+              }}
+              className="w-full px-4 py-3 remove-inner-scroll font-poppins drop-shadow-sm rounded-lg focus:ring-1 focus:ring-gray-200 focus:border-transparent outline-none transition-all bg-[#F5F5F5B2] disabled:opacity-50 disabled:cursor-not-allowed remove-inner-scroll"
+              {...register("age", {
+                required: "Please Enter Your Age!",
+                valueAsNumber: true,
+                validate: (value) => {
+                  if (!value) return "Please Enter Your Age!";
+                  if (value < 1) return "Age must be at least 1";
+                  if (value > 100) return "Age must be 100 or less";
+                  return true;
+                },
+              })}
+            />
           </FormRow>
 
           <FormRow error={errors?.goals?.message}>
@@ -381,7 +488,7 @@ function EditProfile({ onBack }) {
           </Link>
           <button
             type="submit"
-            disabled={isUpdating}
+            disabled={isUpdating || !isValid}
             className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-poppins font-medium disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isUpdating && (

@@ -41,7 +41,6 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
       submitPracticeChessAnswer(puzzleId, answerData),
     {
       onSuccess: (data) => {
-    
         // Extract the puzzle data from the response
         const puzzleData =
           data.puzzles && data.puzzles.length > 0 ? data.puzzles[0] : null;
@@ -59,7 +58,7 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
       alert("Please fill all the steps before submitting.");
       return;
     }
-   
+
     const invalidIndexes = trimmedMoves
       .map((m, i) => ({ i, valid: inputRegex.test(m) }))
       .filter((x) => !x.valid)
@@ -125,7 +124,9 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
 
     const renderCorrectMoves = () => {
       if (!correct_answer || !Array.isArray(correct_answer)) {
-        return <p className="text-gray-600 font-opensans">Solution not available</p>;
+        return (
+          <p className="text-gray-600 font-opensans">Solution not available</p>
+        );
       }
 
       return (
@@ -179,9 +180,7 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
             <span className="text-red-600 font-semibold">Incorrect</span>
           </div>
 
-          <p className="text-blue-500 font-medium">
-            Better Luck Next Time!
-          </p>
+          <p className="text-blue-500 font-medium">Better Luck Next Time!</p>
 
           <div className="rounded-lg">
             <h3 className="font-medium font-poppins text-gray-900 mb-4">
@@ -217,6 +216,8 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
   // Instructions Popup Component
   const InstructionsPopup = () => {
     const instruction = currentPuzzle?.puzzleDetail?.instruction;
+    const description = currentPuzzle?.puzzleDetail?.description;
+
     const difficultyLevel =
       currentPuzzle?.difficultyLevel ||
       currentPuzzle?.puzzleDetail?.difficultyLevel ||
@@ -293,28 +294,19 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
             <div className="text-left space-y-4">
               <div>
                 <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
+                  DESCRIPTION
+                </h4>
+                <div className="text-[#757575] text-sm font-opensans leading-relaxed">
+                  <Markdown>{description}</Markdown>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
                   INSTRUCTIONS
                 </h4>
                 <div className="text-[#757575] text-sm font-opensans leading-relaxed">
                   <Markdown>{processedInstructions}</Markdown>
                 </div>
-              </div>
-
-              {/* Benefits Section */}
-              <div>
-                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
-                  BENEFITS
-                </h4>
-                <ul className="space-y-3 text-[#757575] text-sm font-opensans list-disc pl-5">
-                  <li>
-                    Working on a puzzle reinforces connections between brain
-                    cells.
-                  </li>
-                  <li>
-                    Improves mental speed and is an effective way to improve
-                    short-term memory.
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
@@ -422,7 +414,9 @@ function PlayPracticeChess({ currentPuzzle, onSubmitSuccess }) {
                       value={value}
                       onChange={(e) => handleMoveChange(idx, e.target.value)}
                       placeholder={
-                        idx === 0 ? `Step ${idx + 1} (eg., e4)` : `Step ${idx + 1}`
+                        idx === 0
+                          ? `Step ${idx + 1} (eg., e4)`
+                          : `Step ${idx + 1}`
                       }
                       className={`border w-full rounded-lg p-4 font-roboto outline-none ${
                         value && !valid

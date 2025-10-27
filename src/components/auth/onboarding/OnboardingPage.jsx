@@ -9,18 +9,16 @@ import { useRouter } from "next/navigation";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getAllTrainingGoals } from "@/src/api/practice";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
-import { completeOnboarding, getCities } from "@/src/api/auth";
+import { completeOnboarding } from "@/src/api/auth";
 import Cookies from "js-cookie";
 
-function OnboardingPage({ email, otp }) {
+function OnboardingPage({ email, otp, resetState }) {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
   const { data } = useQueryHandler(getAllTrainingGoals, {
     queryKey: ["training_goals_all"],
   });
-  // const { data: cities } = useQueryHandler(getCities, {
-  //   queryKey: ["cities"],
-  // });
+
   const { mutate: onboarding, isPending } = useMutationHandler(
     completeOnboarding,
     {
@@ -31,17 +29,21 @@ function OnboardingPage({ email, otp }) {
         if (response) {
           Cookies.set("authToken", response?.data?.tokens?.access);
           Cookies.set("refresh_token", response?.data?.tokens?.refresh);
-          router.push("/home");
+          router.push("/challenges");
         }
       },
       onError: (error) => {
         console.error("Error on onboarding:", error);
+        if(error.response.status === 400 && error.response.data.message.includes('Invalid or expired OTP')){
+          setTimeout(() => {
+            resetState?.()
+          }, 1000);
+        }
       },
     }
   );
   const form = useForm({
     defaultValues: {
-      DOB: "",
       email,
       gender: "",
     },
@@ -61,6 +63,7 @@ function OnboardingPage({ email, otp }) {
 
   const handleSubmit = (data) => {
     const finalData = { ...data, otp };
+    // console.log(finalData)
     onboarding(finalData);
   };
 
@@ -73,6 +76,7 @@ function OnboardingPage({ email, otp }) {
           <div className="flex justify-start">
             {currentStep > 1 && (
               <button
+                disabled={isPending}
                 onClick={handleBack}
                 className="p-2 rounded-full border border-gray-300 hover:bg-gray-50 transition-colors"
               >
@@ -81,16 +85,18 @@ function OnboardingPage({ email, otp }) {
             )}
           </div>
 
-          {/* Center - Title */}
-          <div className="flex justify-center">
-            <h1 className="text-3xl font-bold font-poppins">Onboarding</h1>
-          </div>
+          <div className="flex gap-4 sm:flex-row flex-col justify-center items-center">
+            {/* Center - Title */}
+            <div className="flex justify-center">
+              <h1 className="text-3xl font-bold font-poppins">Onboarding</h1>
+            </div>
 
-          {/* Right side - Step indicator */}
-          <div className="flex justify-end">
-            <p className="text-gray-500 text-sm font-medium font-poppins">
-              STEP {currentStep.toString().padStart(2, "0")}/02
-            </p>
+            {/* Right side - Step indicator */}
+            <div className="flex justify-end whitespace-nowrap">
+              <p className="text-gray-500 text-sm font-medium font-poppins">
+                STEP {currentStep.toString().padStart(2, "0")}/02
+              </p>
+            </div>
           </div>
         </div>
         <p className="text-gray-500 text-center font-poppins">
@@ -99,7 +105,7 @@ function OnboardingPage({ email, otp }) {
       </div>
 
       {/* Form Steps */}
-      <div className="max-w-lg w-full mx-auto">
+      <div className="max-w-lg w-full mx-auto mb-16 sm:mb-0">
         {currentStep === 1 ? (
           <StepOne handleNext={handleNext} form={form} />
         ) : (

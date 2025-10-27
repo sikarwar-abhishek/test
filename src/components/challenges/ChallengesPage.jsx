@@ -7,6 +7,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getChallenges } from "@/src/api/challenges";
+import Spinner from "../common/Spinner";
 
 function FilterComponent({ onFilterChange }) {
   const [selectedFilters, setSelectedFilters] = useState(["All"]);
@@ -123,7 +124,7 @@ function ChallengeCard({
   title = "Daily Challenge",
   description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent",
   challengeId,
-  imageSrc = "/asset/mug.jpg",
+  imageSrc = "/asset/puzzle.jpg",
   onStartChallenge,
 }) {
   return (
@@ -138,13 +139,13 @@ function ChallengeCard({
             className="object-cover"
             quality={80}
           />
-          <div className="absolute inset-0 bg-black/30 z-10"></div>
+          <div className="absolute inset-0 z-10"></div>
         </div>
       </div>
 
       {/* Content Section */}
       <div className="p-4 flex flex-col flex-1 justify-between gap-2">
-        <div className="space-y-4">
+        <div className="space-y-2">
           <h3 className="text-lg font-poppins font-semibold">{title}</h3>
           <p className="text-[#757575] font-opensans font-normal text-sm leading-relaxed">
             {description}
@@ -214,7 +215,12 @@ function ChallengesPage() {
     return filteredChallenges;
   }, [challenges, searchQuery, activeFilters]);
 
-  if (isLoading) return <p>Loading..</p>;
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex-1 justify-center place-content-center">
+        <Spinner />
+      </div>
+    );
   if (error)
     return (
       <p className="text-4xl sm:text-5xl lg:text-6xl font-bold font-poppins text-gray-400 text-center">
@@ -223,7 +229,7 @@ function ChallengesPage() {
     );
 
   return (
-    <div className="flex flex-1 max-h-screen overflow-auto">
+    <div className="flex flex-1 max-h-screen overflow-auto pb-24 sm:pb-0">
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-6 sm:gap-12 bg-background">
         <HomePageHeader
           text={"Challenges"}

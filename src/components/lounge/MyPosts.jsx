@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import {
   Edit2,
   MessageCircle,
@@ -10,7 +10,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+// Removed framer-motion to eliminate flickering
 import HomePageHeader from "../common/HomePageHeader";
 import CommentsSection from "./CommentSection";
 import Image from "next/image";
@@ -38,6 +38,125 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/src/components/common/ui/dialog";
+import useMobile from "@/src/hooks/useMobile";
+
+// PostCard component moved outside to fix React.memo
+const PostCard = memo(function PostCard({
+  post,
+  onToggleLike,
+  onViewComments,
+  showDropdown,
+  onToggleDropdown,
+  onEditPost,
+  onDeletePost,
+  dropdownRef,
+  toggleButtonRef,
+}) {
+  return (
+    <div
+      className="flex flex-col bg-white relative border-b-4 border-[#DDE6FF] py-6 last:border-none"
+      style={{ willChange: "auto", backfaceVisibility: "hidden" }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative w-10 h-10">
+          <Image
+            src="/asset/avatar.png"
+            alt={post.username}
+            fill
+            className="rounded-full object-cover"
+          />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-medium line-clamp-1 w-40 sm:w-full">
+            {post.username}
+          </h3>
+          <div className="text-xs text-gray-500">
+            {formatPostTimestamp(post.created_at)}
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute top-2 right-2 dropdown-container">
+        <button
+          onClick={() => onToggleDropdown(post.id)}
+          ref={toggleButtonRef}
+          className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+        >
+          <MoreVertical size={14} className="text-gray-500" />
+        </button>
+
+        {/* Dropdown menu */}
+        {showDropdown === post.id && (
+          <div
+            ref={dropdownRef}
+            className="absolute right-0 top-8 bg-white border rounded-lg shadow-lg py-1 z-10 min-w-[100px]"
+          >
+            <button
+              onClick={(e) => {
+                onEditPost(post);
+              }}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+            >
+              <Edit2 size={12} />
+              Edit
+            </button>
+            <button
+              onClick={(e) => {
+                onDeletePost(post.id);
+              }}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+            >
+              <Trash size={12} />
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
+
+      <p
+        className="mb-4 whitespace-normal break-words"
+        style={{ overflowWrap: "anywhere" }}
+      >
+        {post.description}
+      </p>
+
+      {post.media_type === "image" && post.media_url && (
+        <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
+          <Image
+            src={post.media_url}
+            alt={`${post.username} post ${post.id}`}
+            fill
+            className="object-contain"
+          />
+        </div>
+      )}
+
+      <div className="flex items-center gap-6 text-gray-500">
+        <button
+          onClick={() => onToggleLike(post.id)}
+          className="flex items-center gap-2 hover:text-blue-500 transition-colors disabled:opacity-50"
+          style={{ minHeight: "24px", backfaceVisibility: "hidden" }}
+        >
+          {!post.liked_by_me ? (
+            <MdOutlineThumbUp size={20} />
+          ) : (
+            <RiThumbUpFill size={20} className="text-blue-500" />
+          )}
+          <span style={{ minWidth: "20px", display: "inline-block" }}>
+            {post.likes}
+          </span>
+        </button>
+        <button
+          onClick={() => onViewComments(post.id)}
+          className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+        >
+          <MessageCircle size={20} />
+          <span>{post.comments_count}</span>
+        </button>
+      </div>
+    </div>
+  );
+});
 
 function MyPosts() {
   const [showComments, setShowComments] = useState(false);
@@ -51,9 +170,32 @@ function MyPosts() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const dropdownRef = useRef(null); // For dropdown menu
+  const toggleButtonRef = useRef(null); // For the MoreVertical toggle button
+
+  const { isMobile } = useMobile();
   const queryClient = useQueryClient();
   const debounceTimeouts = useRef({});
   const pendingLikes = useRef({});
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // If the click is outside both the dropdown and the toggle button, close the dropdown
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        toggleButtonRef.current &&
+        !toggleButtonRef.current.contains(event.target)
+      ) {
+        setShowDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch my posts with infinite scroll
   const {
@@ -115,11 +257,11 @@ function MyPosts() {
       console.error("Error toggling like:", error);
 
       // Revert optimistic update on error
+      const pendingState = pendingLikes.current[postId];
+      if (!pendingState) return;
+
       queryClient.setQueryData(["my_posts"], (oldData) => {
         if (!oldData) return oldData;
-
-        const pendingState = pendingLikes.current[postId];
-        if (!pendingState) return oldData;
 
         return {
           ...oldData,
@@ -146,7 +288,7 @@ function MyPosts() {
   // Edit post mutation
   const editPostMutation = useMutation({
     mutationFn: ({ postId, postData }) => editPost(postId, postData),
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Post updated successfully!");
       queryClient.invalidateQueries(["my_posts"]);
       closeEditModal();
@@ -161,8 +303,6 @@ function MyPosts() {
   const allPosts = useMemo(() => {
     return postsData?.pages?.flatMap((page) => page.results) || [];
   }, [postsData]);
-
-  // Immediate like toggle function
   const handleToggleLike = useCallback(
     (postId) => {
       // Clear existing timeout for this post
@@ -213,16 +353,54 @@ function MyPosts() {
       debounceTimeouts.current[postId] = setTimeout(() => {
         likeMutation.mutate(postId);
         delete debounceTimeouts.current[postId];
-      }, 500);
+      }, 100); // Reduced debounce time
     },
     [likeMutation, allPosts, queryClient]
   );
+  const handleViewComments = useCallback((postId) => {
+    setSelectedPostId(postId);
+    setShowComments(true);
+  }, []);
 
-  const toggleDropdown = (postId) => {
-    setShowDropdown(showDropdown === postId ? null : postId);
+  const handleBackToMain = () => {
+    setShowComments(false);
+    setSelectedPostId(null);
   };
 
-  const handleEditPost = (post) => {
+  const handleDeletePost = async (postId) => {
+    await deletePost(postId);
+    setShowDeletePopup(false);
+    queryClient.invalidateQueries(["my_posts"]);
+    toast.success("Post deleted successfully!");
+  };
+
+  // Auto-scroll infinite loading
+  const handleScroll = useCallback(
+    (e) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+      if (
+        scrollHeight - scrollTop <= clientHeight * 1.5 &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  // Memoize the posts list component to prevent re-renders when showComments changes
+
+  // Immediate like toggle function
+
+  const toggleDropdown = useCallback(
+    (postId) => {
+      setShowDropdown(showDropdown === postId ? null : postId);
+    },
+    [showDropdown]
+  );
+
+  const handleEditPost = useCallback((post) => {
     setSelectedPost(post);
     setPostContent(post.description);
     setSelectedImage(post.media_url || null);
@@ -230,7 +408,7 @@ function MyPosts() {
     setUploadedImageUrl(null);
     setShowEditModal(true);
     setShowDropdown(null);
-  };
+  }, []);
 
   const closeEditModal = () => {
     setShowEditModal(false);
@@ -328,129 +506,52 @@ function MyPosts() {
     };
   }, []);
 
-  const handleViewComments = (postId) => {
-    setSelectedPostId(postId);
-    setShowComments(true);
-  };
-
-  const handleBackToMain = () => {
-    setShowComments(false);
-    setSelectedPostId(null);
-  };
-
-  const handleDeletePost = async (postId) => {
-    await deletePost(postId);
-    setShowDeletePopup(false);
-    queryClient.invalidateQueries(["my_posts"]);
-    toast.success("Post deleted successfully!");
-  };
-
-  // Auto-scroll infinite loading
-  const handleScroll = useCallback(
-    (e) => {
-      const { scrollTop, scrollHeight, clientHeight } = e.target;
-      if (
-        scrollHeight - scrollTop <= clientHeight * 1.5 &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage]
-  );
-
-  function PostCard({ post, onToggleLike }) {
+  const PostsList = useMemo(() => {
     return (
-      <motion.div
-        className="bg-white relative border-b-4 border-[#DDE6FF] py-6 last:border-none"
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative w-10 h-10">
-            <Image
-              src="/asset/avatar.png"
-              alt={post.username}
-              fill
-              className="rounded-full object-cover"
+      <div className="font-poppins">
+        {allPosts.length > 0 ? (
+          allPosts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onToggleLike={handleToggleLike}
+              onViewComments={handleViewComments}
+              showDropdown={showDropdown}
+              onToggleDropdown={toggleDropdown}
+              onEditPost={handleEditPost}
+              onDeletePost={(postId) => setShowDeletePopup(postId)}
+              dropdownRef={dropdownRef}
+              toggleButtonRef={toggleButtonRef}
             />
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-medium">{post.username}</h3>
-
-            <div className="text-xs text-gray-500">
-              {formatPostTimestamp(post.created_at)}
-            </div>
-          </div>
-        </div>
-        <div className="absolute top-2 right-2 dropdown-container">
-          <button
-            onClick={() => toggleDropdown(post.id)}
-            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <MoreVertical size={14} className="text-gray-500" />
-          </button>
-
-          {/* Dropdown menu */}
-          {showDropdown === post.id && (
-            <div className="absolute right-0 top-8 bg-white border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
-              <button
-                onClick={() => handleEditPost(post)}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
-              >
-                <Edit2 size={12} />
-                Edit
-              </button>
-              <button
-                onClick={() => setShowDeletePopup(post.id)}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
-              >
-                <Trash size={12} />
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
-        <p className="mb-4">{post.description}</p>
-
-        {post.media_type === "image" && post.media_url && (
-          <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
-            <Image
-              src={post.media_url}
-              alt={`${post.username} post ${post.id}`}
-              fill
-              className="object-contain"
-            />
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No posts available.</p>
           </div>
         )}
 
-        <div className="flex items-center gap-6 text-gray-500">
-          <motion.button
-            onClick={() => onToggleLike(post.id)}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors disabled:opacity-50"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {!post.liked_by_me ? (
-              <MdOutlineThumbUp size={20} />
-            ) : (
-              <RiThumbUpFill size={20} className="text-blue-500" />
-            )}
-            <span>{post.likes}</span>
-          </motion.button>
-          <motion.button
-            onClick={() => handleViewComments(post.id)}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <MessageCircle size={20} />
-            <span>{post.comments_count}</span>
-          </motion.button>
-        </div>
-      </motion.div>
+        {/* Loading indicator for infinite scroll */}
+        {isFetchingNextPage && (
+          <div className="py-6 text-center">
+            <div className="inline-flex items-center gap-2 text-blue-500">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              Loading more posts...
+            </div>
+          </div>
+        )}
+      </div>
     );
-  }
+  }, [
+    allPosts,
+    handleToggleLike,
+    handleViewComments,
+    showDropdown,
+    toggleDropdown,
+    handleEditPost,
+    isFetchingNextPage,
+  ]);
+
+  // Removed handleScroll since infinite scroll is temporarily disabled
 
   // Loading state
   if (isLoading && allPosts.length === 0) {
@@ -544,79 +645,49 @@ function MyPosts() {
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-8 bg-background">
         <HomePageHeader text={"My Posts"} backBtn />
 
-        <div className="flex gap-8 overflow-auto no-scrollbar">
-          {/* Main Posts Content */}
-          <motion.div
-            className="flex-1 font-poppins overflow-auto no-scrollbar"
-            onScroll={handleScroll}
-            animate={{
-              width: showComments ? "70%" : "100%",
-              marginRight: showComments ? "1rem" : "0",
-            }}
-            transition={{
-              duration: 0.4,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
-          >
-            {allPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onToggleLike={handleToggleLike}
-              />
-            ))}
+        {/* Mobile Layout - Comments fill whole screen */}
+        {isMobile ? (
+          showComments ? (
+            /* Comments Section - Mobile (full screen) */
+            <div className="fixed inset-0 z-50 bg-background">
+              <div className="h-full flex flex-col p-4">
+                <CommentsSection
+                  postId={selectedPostId}
+                  onBack={handleBackToMain}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Main Posts Content - Mobile (when comments not shown) */
+            <div
+              className="flex-1 overflow-auto no-scrollbar"
+              onScroll={handleScroll}
+            >
+              {PostsList}
+            </div>
+          )
+        ) : (
+          /* Desktop Layout - Comments on right side */
+          <div className="flex gap-8 overflow-auto no-scrollbar">
+            {/* Main Posts Content - Desktop */}
+            <div
+              className="flex-1 overflow-auto no-scrollbar"
+              onScroll={handleScroll}
+            >
+              {PostsList}
+            </div>
 
-            {/* Loading indicator for infinite scroll */}
-            {isFetchingNextPage && (
-              <div className="py-6 text-center">
-                <div className="inline-flex items-center gap-2 text-blue-500">
-                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  Loading more posts...
-                </div>
+            {/* Comments Section - appears on the right when a comment button is clicked */}
+            {showComments && (
+              <div className="flex-shrink-0" style={{ width: "38%" }}>
+                <CommentsSection
+                  postId={selectedPostId}
+                  onBack={handleBackToMain}
+                />
               </div>
             )}
-          </motion.div>
-
-          {/* Comments Section - appears on the right when a comment button is clicked */}
-          <AnimatePresence mode="wait">
-            {showComments && (
-              <motion.div
-                className="flex-shrink-0"
-                initial={{
-                  x: "100%",
-                  opacity: 0,
-                  width: 0,
-                }}
-                animate={{
-                  x: 0,
-                  opacity: 1,
-                  width: "33%",
-                }}
-                exit={{
-                  x: "100%",
-                  opacity: 0,
-                  width: 0,
-                }}
-                transition={{
-                  duration: 0.4,
-                  ease: [0.4, 0.0, 0.2, 1],
-                }}
-              >
-                <motion.div
-                  initial={{ scale: 0.95 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: 0.1 }}
-                >
-                  <CommentsSection
-                    postId={selectedPostId}
-                    onBack={handleBackToMain}
-                  />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Popup */}
@@ -628,7 +699,18 @@ function MyPosts() {
 
       {/* Edit Post Modal */}
       <Dialog open={showEditModal} onOpenChange={closeEditModal}>
-        <DialogContent className="max-w-2xl mx-auto bg-white rounded-2xl p-6 border-0 shadow-xl">
+        <DialogContent
+          className="w-[calc(100vw-2rem)] max-w-2xl mx-auto bg-white rounded-2xl p-4 sm:p-6 border-0 shadow-xl [&>button]:hidden"
+          onPointerDownOutside={(e) => {
+            if (editPostMutation.isPending || isUploading) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (editPostMutation.isPending || isUploading) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            if (editPostMutation.isPending || isUploading) e.preventDefault();
+          }}
+        >
           <DialogTitle className="sr-only">Edit Post</DialogTitle>
 
           <div className="space-y-6">
@@ -643,7 +725,7 @@ function MyPosts() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h2 className="text-lg font-semibold font-poppins">
+              <h2 className="text-lg font-semibold font-poppins overflow-hidden text-ellipsis whitespace-nowrap w-40 sm:w-60 md:w-72 lg:w-96">
                 {selectedPost?.username || "User"}
               </h2>
             </div>
@@ -651,6 +733,7 @@ function MyPosts() {
             {/* Post Content Textarea */}
             <div className="relative">
               <textarea
+                disabled={editPostMutation.isPending || isUploading}
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
                 placeholder="What are you thinking ?"
@@ -660,7 +743,13 @@ function MyPosts() {
 
             {/* Action Buttons */}
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-xl font-poppins font-medium hover:bg-blue-200 transition-colors cursor-pointer">
+              <label
+                className={`${
+                  editPostMutation.isPending || isUploading
+                    ? "bg-gray-300 cursor-not-allowed text-white"
+                    : "bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors cursor-pointer"
+                } flex items-center gap-2 px-4 py-2  rounded-xl font-poppins font-medium `}
+              >
                 <ImageIcon size={20} />
                 Change Photo
                 <input

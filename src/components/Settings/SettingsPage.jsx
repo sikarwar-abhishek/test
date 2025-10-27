@@ -79,7 +79,7 @@ function SettingsPage() {
                 />
               </div>
               <div className="flex mx-auto items-center font-poppins">
-                <span className="font-medium text-xl text-black leading-4">
+                <span className="font-medium text-xl text-black leading-tight text-center truncate text-ellipsis overflow-hidden w-52 sm:w-60 md:w-72 lg:w-96">
                   {value?.first_name} {value?.last_name}
                 </span>
               </div>
@@ -92,14 +92,14 @@ function SettingsPage() {
             <h1 className="font-poppins font-semibold text-xl text-gray-600 mb-6">
               Account Settings
             </h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 sm:mb-0">
               {settingsOptions.map((option) => (
                 <div
                   onClick={() => handleOptionClick(option.id)}
                   key={option.id}
                   className="flex items-center justify-between py-3 px-2 bg-[#588DFF]/5 hover:bg-gray-100 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm shadow-md drop-shadow-sm border-gray-200"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 select-none">
                     <Icon name={option.icon} className="w-8 h-8" />
                     <span className="font-poppins font-medium text-gray-700 text-base">
                       {option.title}

@@ -42,7 +42,7 @@ function LeaderboardListItem({ player, currentUser }) {
             />
           </div>
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-sm sm:text-lg font-medium text-gray-800 truncate">
+            <span className="text-sm sm:text-lg font-medium text-gray-800 truncate w-24 sm:w-60 md:w-72 lg:w-96">
               {player.username || `User ${player.rank}`}
               {currentUser?.rank === player.rank && " (Me)"}
             </span>

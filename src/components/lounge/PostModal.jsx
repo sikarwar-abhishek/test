@@ -30,6 +30,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
     onSuccess: async (response) => {
       if (response) {
         toast.success("Post created successfully!");
+        queryClient.invalidateQueries(["user_profile"]);
         onClose();
       }
     },
@@ -99,6 +100,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
       const imageUrl = URL.createObjectURL(file);
       setSelectedImage(imageUrl);
       setSelectedFile(file);
+      event.target.value = null;
     }
   };
 
@@ -126,10 +128,19 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
       setIsUploading(false);
     }
   }, [isOpen, handleRemoveImage]);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl sm:mx-auto bg-white rounded-2xl sm:m-0 p-4 sm:p-6 border-0 shadow-xl">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl mx-auto bg-white rounded-2xl p-4 sm:p-6 border-0 shadow-xl [&>button]:hidden"
+        onPointerDownOutside={(e) => {
+          if (isPosting || isUploading) e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          if (isPosting || isUploading) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (isPosting || isUploading) e.preventDefault();
+        }}
+      >
         <DialogTitle className="sr-only">Create New Post</DialogTitle>
 
         <div className="space-y-6">
@@ -144,7 +155,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
                 className="w-full h-full object-cover"
               />
             </div>
-            <h2 className="text-lg font-semibold font-poppins">
+            <h2 className="text-lg font-semibold font-poppins overflow-hidden whitespace-nowrap truncate text-ellipsis w-40 sm:w-60 md:w-72 lg:w-96">
               {user.first_name} {user.last_name}
             </h2>
           </div>
@@ -152,6 +163,7 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
           {/* Post Content Textarea */}
           <div className="relative">
             <textarea
+              disabled={isPosting || isUploading}
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
               placeholder="What are you thinking ?"
@@ -161,11 +173,17 @@ function PostModal({ user, isOpen, onClose, onSubmit }) {
 
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-xl font-poppins font-medium hover:bg-blue-200 transition-colors cursor-pointer">
+            <label
+              className={`${isPosting || isUploading
+                ? "bg-gray-300 cursor-not-allowed text-white"
+                : "bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors cursor-pointer"
+                } flex items-center gap-2 px-4 py-2  rounded-xl font-poppins font-medium`}
+            >
               <ImageIcon size={20} />
               Photo
               <input
                 type="file"
+                disabled={isPosting || isUploading}
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"

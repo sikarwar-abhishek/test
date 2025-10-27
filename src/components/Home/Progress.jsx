@@ -3,6 +3,7 @@ import useQueryHandler from "@/src/hooks/useQueryHandler";
 import Icon from "../common/Icon";
 import ScoreCharts from "./ScoreCharts";
 import { userProgress } from "@/src/api/home";
+import Spinner from "../common/Spinner";
 
 function ScoreCard({ icon, score, label }) {
   return (
@@ -19,7 +20,12 @@ function Progress() {
     queryKey: ["user_progress"],
   });
 
-  if (isLoading) return <p>Loading..</p>;
+  if (isLoading)
+    return (
+      <div className="h-[calc(100vh-10rem)] w-full justify-center place-content-center">
+        <Spinner />;
+      </div>
+    );
   if (error) return <p> Error</p>;
   const {
     proficiencyScore,
@@ -30,7 +36,7 @@ function Progress() {
     charts,
   } = data;
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-72 sm:pb-0">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ScoreCard
           icon="price"

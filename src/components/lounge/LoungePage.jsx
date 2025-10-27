@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import Image from "next/image";
-import { Clock, MessageCircle, ArrowRight, ChevronDown } from "lucide-react";
+import { MessageCircle, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import HomePageHeader from "../common/HomePageHeader";
 import Link from "next/link";
@@ -26,6 +26,8 @@ import { formatPostTimestamp } from "@/src/utils/dateUtils";
 import { MdOutlineThumbUp } from "react-icons/md";
 import { RiThumbUpFill } from "react-icons/ri";
 import RightSection from "../Home/RightSection";
+import useMobile from "@/src/hooks/useMobile";
+import Spinner from "../common/Spinner";
 function PostCard({ post, onViewComments, onToggleLike }) {
   return (
     <div className="bg-white border-b-4 border-[#DDE6FF] py-6 last:border-none">
@@ -39,7 +41,9 @@ function PostCard({ post, onViewComments, onToggleLike }) {
           />
         </div>
         <div className="space-y-1">
-          <h3 className="font-medium">{post.username}</h3>
+          <h3 className="font-medium max-w-[250px] line-clamp-1">
+            {post.username}
+          </h3>
           <div className="flex gap-2">
             <div className="flex gap-1 items-center border-r pr-2 border-[#D9D9D9]">
               <Icon name={"price"} className="w-3 h-3" />
@@ -66,10 +70,11 @@ function PostCard({ post, onViewComments, onToggleLike }) {
         </div>
       </div>
 
-      <p className="mb-4">{post.description}</p>
+      <p className="mb-4 whitespace-normal break-words" style={{ overflowWrap: "anywhere" }}>{post.description}</p>
 
       {post.media_type === "image" &&
-        !post.media_url.startsWith("https://your-bucket.s3.amazonaws.com/") && (
+        !post.media_url.startsWith("https://your-bucket.s3.amazonaws.com/") &&
+        post.media_url !== "" && (
           <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
             <Image
               src={post.media_url}
@@ -123,6 +128,7 @@ function LoungePage() {
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
 
+  const { isMobile } = useMobile();
   const queryClient = useQueryClient();
   const debounceTimeouts = useRef({});
   const searchParams = useSearchParams();
@@ -205,10 +211,10 @@ function LoungePage() {
             results: page.results.map((post) =>
               post.id === postId
                 ? {
-                    ...post,
-                    likes: data.likes_count,
-                    liked_by_me: data.is_liked,
-                  }
+                  ...post,
+                  likes: data.likes_count,
+                  liked_by_me: data.is_liked,
+                }
                 : post
             ),
           })),
@@ -249,10 +255,10 @@ function LoungePage() {
             results: page.results.map((post) =>
               post.id === postId
                 ? {
-                    ...post,
-                    likes: pendingState.originalLikes,
-                    liked_by_me: pendingState.originalLikedByMe,
-                  }
+                  ...post,
+                  likes: pendingState.originalLikes,
+                  liked_by_me: pendingState.originalLikedByMe,
+                }
                 : post
             ),
           })),
@@ -276,21 +282,27 @@ function LoungePage() {
       delete pendingLikes.current[postId];
     },
   });
+
   const allPosts = useMemo(() => {
     return postsData?.pages?.flatMap((page) => page.results) || [];
   }, [postsData]);
+
   // Immediate like toggle function
   const handleToggleLike = useCallback(
     (postId) => {
+      console.log('like is called')
       // Clear existing timeout for this post
       if (debounceTimeouts.current[postId]) {
         clearTimeout(debounceTimeouts.current[postId]);
       }
 
-      // Get current post state
-      const currentPost = allPosts.find((post) => post.id === postId);
+      // Get current post state - check allPosts first, then specificPost
+      let currentPost = allPosts.find((post) => post.id === postId);
+      if (!currentPost && specificPost && specificPost.id === postId) {
+        currentPost = specificPost;
+      }
       if (!currentPost) return;
-
+      console.log('in all posts')
       // Store original state if not already pending
       if (!pendingLikes.current[postId]) {
         pendingLikes.current[postId] = {
@@ -316,10 +328,10 @@ function LoungePage() {
             results: page.results.map((post) =>
               post.id === postId
                 ? {
-                    ...post,
-                    likes: newLikes,
-                    liked_by_me: newLikedByMe,
-                  }
+                  ...post,
+                  likes: newLikes,
+                  liked_by_me: newLikedByMe,
+                }
                 : post
             ),
           })),
@@ -355,10 +367,12 @@ function LoungePage() {
     };
   }, []);
 
-  // Flatten all pages into a single array
-
   if (isLoading || (postsLoading && allPosts.length === 0 && !specificPost))
-    return <p>Loading..</p>;
+    return (
+      <div className="min-h-screen flex-1 place-content-center">
+        <Spinner />
+      </div>
+    );
   const value = data?.data;
   const { proficiency_score, community_score, fitness_score } = value;
   const stats = [
@@ -402,235 +416,453 @@ function LoungePage() {
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-8 bg-background">
         <HomePageHeader text={"Lounge"} />
 
-        <div className="flex gap-8 sm:mt-6 overflow-auto no-scrollbar">
-          {/* Main Content Area */}
-          <motion.div
-            className="flex-1 space-y-6 overflow-auto no-scrollbar"
-            animate={{
-              width: showComments ? "70%" : "100%",
-              marginRight: showComments ? "1rem" : "0",
-            }}
-            transition={{
-              duration: 0.4,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
-          >
-            {/* User Profile Section */}
-            <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl sm:p-6 p-4">
-              <div className="flex items-center justify-between mb-6 font-poppins">
-                <div className="flex items-center gap-4">
-                  <div className="relative sm:w-16 sm:h-16 w-8 h-8">
-                    <Image
-                      src="/asset/avatar.png"
-                      alt={value?.first_name}
-                      fill
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-sm sm:text-xl line-clamp-1 overflow-hidden font-semibold text-gray-800">
-                      {value?.first_name} {value?.last_name}
-                    </h2>
-                  </div>
-                </div>
-                <Link
-                  href={"/lounge/myposts"}
-                  className="bg-white rounded-lg p-3 text-gray-500 text-xs sm:text-sm hover:text-gray-800 font-medium"
-                >
-                  My Post
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 font-poppins">
-                {stats.map((stat, index) => (
-                  <StatCard key={index} stat={stat} />
-                ))}
-              </div>
-            </div>
-
-            {/* Post Creation */}
-            <div className="bg-white rounded-xl sm:p-2 p-1 border">
-              <div className="flex items-center sm:gap-3 font-poppins">
-                <div className="relative w-8 h-8">
-                  <Image
-                    src="/asset/avatar.png"
-                    alt="Your avatar"
-                    fill
-                    className="rounded-full object-cover"
-                  />
-                </div>
-                <input
-                  type="text"
-                  placeholder="What are you thinking ?"
-                  onClick={handleInputClick}
-                  value={postText}
-                  onChange={(e) => setPostText(e.target.value)}
-                  className="sm:flex-1 w-full px-4 py-2 outline-none"
-                  readOnly
-                />
-              </div>
-            </div>
-
-            {/* Feed Posts */}
-            <div className="font-poppins">
-              {postsLoading && allPosts.length === 0 && !specificPost ? (
-                // Loading skeleton
-                <div className="space-y-6">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="bg-white border-b-4 border-[#DDE6FF] py-6 animate-pulse"
-                    >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                        <div className="space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-32"></div>
-                          <div className="h-3 bg-gray-200 rounded w-24"></div>
-                        </div>
-                      </div>
-                      <div className="space-y-2 mb-4">
-                        <div className="h-4 bg-gray-200 rounded w-full"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      </div>
-                      <div className="flex gap-6">
-                        <div className="h-4 bg-gray-200 rounded w-16"></div>
-                        <div className="h-4 bg-gray-200 rounded w-16"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : postsError ? (
-                // Error state
-                <div className="text-center py-8">
-                  <p className="text-red-500 mb-4">Failed to load posts</p>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                  >
-                    Retry
-                  </button>
-                </div>
-              ) : allPosts.length > 0 || specificPost ? (
-                // Render posts
-                <>
-                  {/* Specific Post - shown at top when postId is in URL */}
-                  {specificPost && (
-                    <motion.div
-                      ref={specificPostRef}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="mb-6"
-                    >
-                      <div className="p-1 rounded-xl">
-                        <PostCard
-                          key={`specific-${specificPost.id}`}
-                          post={specificPost}
-                          onViewComments={handleViewComments}
-                          onToggleLike={handleToggleLike}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Regular Feed Posts */}
-                  {allPosts.length > 0 && (
-                    <>
-                      {/* Feed Posts Header */}
-                      {specificPost && (
-                        <div className="mb-4">
-                          <h3 className="text-lg font-semibold text-gray-700 font-poppins">
-                            Feed Posts
-                          </h3>
-                          <div className="h-px bg-gradient-to-r from-blue-200 to-purple-200 mt-2"></div>
-                        </div>
-                      )}
-
-                      {allPosts
-                        .filter(
-                          (post) => !specificPost || post.id != specificPost.id
-                        ) // Avoid duplicates
-                        .map((post) => (
-                          <PostCard
-                            key={post.id}
-                            post={post}
-                            onViewComments={handleViewComments}
-                            onToggleLike={handleToggleLike}
-                          />
-                        ))}
-                    </>
-                  )}
-
-                  {/* Load More Button */}
-                  {hasNextPage && (
-                    <div className="flex justify-center py-6">
-                      <button
-                        onClick={() => fetchNextPage()}
-                        disabled={isFetchingNextPage}
-                        className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-poppins"
-                      >
-                        {isFetchingNextPage ? "Loading..." : "Load More Posts"}
-                        <ChevronDown
-                          className={isFetchingNextPage ? "animate-spin" : ""}
-                        />
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                // Empty state - only show if no specific post either
-                !specificPost && (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No posts available at the moment.</p>
-                  </div>
-                )
-              )}
-            </div>
-          </motion.div>
-
-          {/* Comments Section - appears on the right when a comment button is clicked */}
-          <AnimatePresence mode="wait">
-            {showComments && (
+        {/* Mobile Layout - Comments fill whole screen */}
+        {isMobile ? (
+          showComments ? (
+            /* Comments Section - Mobile (full screen) */
+            <AnimatePresence mode="wait">
               <motion.div
-                className="flex-shrink-0"
+                className="fixed inset-0 z-50 bg-background"
                 initial={{
-                  x: "100%",
                   opacity: 0,
-                  width: 0,
                 }}
                 animate={{
-                  x: 0,
                   opacity: 1,
-                  width: "33%",
                 }}
                 exit={{
-                  x: "100%",
                   opacity: 0,
-                  width: 0,
                 }}
                 transition={{
-                  duration: 0.4,
+                  duration: 0.3,
                   ease: [0.4, 0.0, 0.2, 1],
                 }}
               >
-                <motion.div
-                  initial={{ scale: 0.95 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: 0.1 }}
-                >
+                <div className="h-full flex flex-col p-4">
                   <CommentsSection
                     postId={selectedPostId}
                     onBack={handleBackToSidebar}
                   />
-                </motion.div>
+                </div>
               </motion.div>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
+          ) : (
+            /* Main Content Area - Mobile (when comments not shown) */
+            <div className="flex flex-col gap-4 sm:mt-6 overflow-auto no-scrollbar">
+              <div className="flex-1 space-y-6 overflow-auto no-scrollbar">
+                {/* User Profile Section */}
+                <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl sm:p-6 p-4">
+                  <div className="flex items-center justify-between mb-6 font-poppins">
+                    <div className="flex items-center gap-4">
+                      <div className="relative sm:w-16 sm:h-16 w-8 h-8">
+                        <Image
+                          src="/asset/avatar.png"
+                          alt={value?.first_name}
+                          fill
+                          className="rounded-full object-cover"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-sm sm:text-xl overflow-hidden font-semibold text-gray-800 truncate whitespace-nowrap w-32">
+                          {value?.first_name} {value?.last_name}
+                        </h2>
+                      </div>
+                    </div>
+                    <Link
+                      href={"/lounge/myposts"}
+                      className="bg-white rounded-lg p-3 whitespace-nowrap text-gray-500 text-xs sm:text-sm hover:text-gray-800 font-medium"
+                    >
+                      My Post
+                    </Link>
+                  </div>
 
-          {/* Original Sidebar - Only show when comments are not open */}
-          {!showComments && <RightSection />}
-        </div>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 font-poppins">
+                    {stats.map((stat, index) => (
+                      <StatCard key={index} stat={stat} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Post Creation */}
+                <div className="bg-white rounded-xl sm:p-2 p-1 border">
+                  <div className="flex items-center sm:gap-3 font-poppins">
+                    <div className="relative w-8 h-8">
+                      <Image
+                        src="/asset/avatar.png"
+                        alt="Your avatar"
+                        fill
+                        className="rounded-full object-contain"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="What are you thinking ?"
+                      onClick={handleInputClick}
+                      value={postText}
+                      onChange={(e) => setPostText(e.target.value)}
+                      className="sm:flex-1 w-full px-4 py-2 outline-none"
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                {/* Feed Posts */}
+                <div className="font-poppins">
+                  {postsLoading && allPosts.length === 0 && !specificPost ? (
+                    // Loading skeleton
+                    <div className="space-y-6">
+                      {[...Array(3)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="bg-white border-b-4 border-[#DDE6FF] py-6 animate-pulse"
+                        >
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                            <div className="space-y-2">
+                              <div className="h-4 bg-gray-200 rounded w-32"></div>
+                              <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            </div>
+                          </div>
+                          <div className="space-y-2 mb-4">
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                          <div className="flex gap-6">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : postsError ? (
+                    // Error state
+                    <div className="text-center py-8">
+                      <p className="text-red-500 mb-4">Failed to load posts</p>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : allPosts.length > 0 || specificPost ? (
+                    // Render posts
+                    <>
+                      {/* Specific Post - shown at top when postId is in URL */}
+                      {specificPost && (
+                        <motion.div
+                          ref={specificPostRef}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5 }}
+                          className="mb-6"
+                        >
+                          <div className="p-1 rounded-xl">
+                            <PostCard
+                              key={`specific-${specificPost.id}`}
+                              post={specificPost}
+                              onViewComments={handleViewComments}
+                              onToggleLike={handleToggleLike}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Regular Feed Posts */}
+                      {allPosts.length > 0 && (
+                        <>
+                          {/* Feed Posts Header */}
+                          {specificPost && (
+                            <div className="mb-4">
+                              <h3 className="text-lg font-semibold text-gray-700 font-poppins">
+                                Feed Posts
+                              </h3>
+                              <div className="h-px bg-gradient-to-r from-blue-200 to-purple-200 mt-2"></div>
+                            </div>
+                          )}
+
+                          {allPosts
+                            .filter(
+                              (post) =>
+                                !specificPost || post.id != specificPost.id
+                            ) // Avoid duplicates
+                            .map((post) => (
+                              <PostCard
+                                key={post.id}
+                                post={post}
+                                onViewComments={handleViewComments}
+                                onToggleLike={handleToggleLike}
+                              />
+                            ))}
+                        </>
+                      )}
+
+                      {/* Load More Button */}
+                      {hasNextPage && (
+                        <div className="flex justify-center py-6">
+                          <button
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                            className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-poppins"
+                          >
+                            {isFetchingNextPage
+                              ? "Loading..."
+                              : "Load More Posts"}
+                            <ChevronDown
+                              className={
+                                isFetchingNextPage ? "animate-spin" : ""
+                              }
+                            />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Empty state - only show if no specific post either
+                    !specificPost && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No posts available at the moment.</p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        ) : (
+          /* Desktop Layout - Comments on right side */
+          <div className="flex gap-8 sm:mt-6 overflow-auto no-scrollbar">
+            {/* Main Content Area - Desktop */}
+            <motion.div
+              className="flex-1 space-y-6 overflow-auto no-scrollbar"
+              animate={{
+                width: showComments ? "70%" : "100%",
+                marginRight: showComments ? "0.5rem" : "0",
+              }}
+              transition={{
+                duration: 0.4,
+                ease: [0.4, 0.0, 0.2, 1],
+              }}
+            >
+              {/* User Profile Section */}
+              <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl sm:p-6 p-4">
+                <div className="flex items-center justify-between mb-6 font-poppins">
+                  <div className="flex items-center gap-4">
+                    <div className="relative sm:w-16 sm:h-16 w-8 h-8">
+                      <Image
+                        src="/asset/avatar.png"
+                        alt={value?.first_name}
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-sm sm:text-xl font-semibold text-gray-800 truncate whitespace-nowrap overflow-hidden sm:w-60 md:w-72 lg:w-96 w-44">
+                        {value?.first_name} {value?.last_name}
+                      </h2>
+                    </div>
+                  </div>
+                  <Link
+                    href={"/lounge/myposts"}
+                    className="bg-white rounded-lg p-3 sm:whitespace-nowrap text-gray-500 text-xs sm:text-sm hover:text-gray-800 font-medium"
+                  >
+                    My Post
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 font-poppins">
+                  {stats.map((stat, index) => (
+                    <StatCard key={index} stat={stat} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Post Creation */}
+              <div className="bg-white rounded-xl sm:p-2 p-1 border">
+                <div className="flex items-center sm:gap-3 font-poppins">
+                  <div className="relative w-8 h-8">
+                    <Image
+                      src="/asset/avatar.png"
+                      alt="Your avatar"
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="What are you thinking ?"
+                    onClick={handleInputClick}
+                    value={postText}
+                    onChange={(e) => setPostText(e.target.value)}
+                    className="sm:flex-1 w-full px-4 py-2 outline-none"
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Feed Posts */}
+              <div className="font-poppins">
+                {postsLoading && allPosts.length === 0 && !specificPost ? (
+                  // Loading skeleton
+                  <div className="space-y-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="bg-white border-b-4 border-[#DDE6FF] py-6 animate-pulse"
+                      >
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-32"></div>
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                          </div>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                        <div className="flex gap-6">
+                          <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          <div className="h-4 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : postsError ? (
+                  // Error state
+                  <div className="text-center py-8">
+                    <p className="text-red-500 mb-4">Failed to load posts</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : allPosts.length > 0 || specificPost ? (
+                  // Render posts
+                  <>
+                    {/* Specific Post - shown at top when postId is in URL */}
+                    {specificPost && (
+                      <motion.div
+                        ref={specificPostRef}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="mb-6"
+                      >
+                        <div className="p-1 rounded-xl">
+                          <PostCard
+                            key={`specific-${specificPost.id}`}
+                            post={specificPost}
+                            onViewComments={handleViewComments}
+                            onToggleLike={handleToggleLike}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Regular Feed Posts */}
+                    {allPosts.length > 0 && (
+                      <>
+                        {/* Feed Posts Header */}
+                        {specificPost && (
+                          <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-700 font-poppins">
+                              Feed Posts
+                            </h3>
+                            <div className="h-px bg-gradient-to-r from-blue-200 to-purple-200 mt-2"></div>
+                          </div>
+                        )}
+
+                        {allPosts
+                          .filter(
+                            (post) =>
+                              !specificPost || post.id != specificPost.id
+                          ) // Avoid duplicates
+                          .map((post) => (
+                            <PostCard
+                              key={post.id}
+                              post={post}
+                              onViewComments={handleViewComments}
+                              onToggleLike={handleToggleLike}
+                            />
+                          ))}
+                      </>
+                    )}
+
+                    {/* Load More Button */}
+                    {hasNextPage && (
+                      <div className="flex justify-center py-6">
+                        <button
+                          onClick={() => fetchNextPage()}
+                          disabled={isFetchingNextPage}
+                          className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-poppins"
+                        >
+                          {isFetchingNextPage
+                            ? "Loading..."
+                            : "Load More Posts"}
+                          <ChevronDown
+                            className={isFetchingNextPage ? "animate-spin" : ""}
+                          />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Empty state - only show if no specific post either
+                  !specificPost && (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No posts available at the moment.</p>
+                    </div>
+                  )
+                )}
+              </div>
+            </motion.div>
+
+            {/* Comments Section - appears on the right when a comment button is clicked */}
+            <AnimatePresence mode="wait">
+              {showComments && (
+                <motion.div
+                  className="flex-shrink-0"
+                  initial={{
+                    x: "100%",
+                    opacity: 0,
+                    width: 0,
+                  }}
+                  animate={{
+                    x: 0,
+                    opacity: 1,
+                    width: "38%",
+                  }}
+                  exit={{
+                    x: "100%",
+                    opacity: 0,
+                    width: 0,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.4, 0.0, 0.2, 1],
+                  }}
+                >
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: 0.1 }}
+                  >
+                    <CommentsSection
+                      postId={selectedPostId}
+                      onBack={handleBackToSidebar}
+                    />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Original Sidebar - Only show when comments are not open */}
+            {!showComments && <RightSection />}
+          </div>
+        )}
       </div>
       <PostModal
         user={value}

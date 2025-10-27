@@ -2,7 +2,11 @@
 
 import { ArrowLeft, Bell, Search } from "lucide-react";
 import { Input } from "../common/ui/input";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Icon from "./Icon";
+import Link from "next/link";
+
+const allowedPath = ["/home", "/practice", "/challenges", "/lounge"];
 function HomePageHeader({
   text,
   backBtn = false,
@@ -13,7 +17,7 @@ function HomePageHeader({
   searchPlaceholder = "Search",
 }) {
   const router = useRouter();
-
+  const pathname = usePathname();
   const handleBackClick = () => {
     if (onBack) {
       onBack();
@@ -24,7 +28,7 @@ function HomePageHeader({
 
   return (
     <header className="flex sm:items-center gap-4 sm:justify-between flex-col sm:flex-row">
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-1 gap-4 items-center">
         <button
           className="border rounded-full p-2 drop-shadow-sm hover:bg-gray-50"
           style={{
@@ -34,9 +38,16 @@ function HomePageHeader({
         >
           <ArrowLeft size={16} />
         </button>
-        <h1 className="md:text-2xl sm:text-xl text-lg font-semibold font-poppins text-[#23272E]">
+        <h1 className="select-none md:text-2xl sm:text-xl text-lg font-semibold font-poppins text-[#23272E] w-[calc(100%-3rem)] sm:w-60 md:w-72 lg:w-96 truncate text-ellipsis">
           {text}
         </h1>
+
+        {allowedPath.some((route) => pathname === route) && <Link href={'/myprofile'} className="sm:hidden ml-auto rounded-full drop-shadow-sm hover:bg-gray-50">
+          <Icon
+            name={'avatar'}
+            className={`w-8 h-8 transition-colors duration-200 ease-in-out`}
+          />
+        </Link>}
       </div>
 
       {search && (

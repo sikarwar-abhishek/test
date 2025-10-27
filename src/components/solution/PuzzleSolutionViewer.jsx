@@ -8,6 +8,7 @@ import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import DOMPurify from 'dompurify';
 
 function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const puzzleDetail = puzzle.puzzleDetail || puzzle;
@@ -35,7 +36,7 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
           date,
         ]);
       }
-      toast.success("feedback submitted successfully.");
+      toast.success("Feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);
@@ -95,7 +96,7 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
 
   // Instructions Popup Component
   const InstructionsPopup = () => {
-    const { instruction, difficultyLevel } = puzzle;
+    const { instruction, description, difficultyLevel } = puzzle;
     const maxStars = 5;
 
     return (
@@ -133,11 +134,10 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
                 {[...Array(maxStars)].map((_, index) => (
                   <Star
                     key={index}
-                    className={`w-6 h-6 ${
-                      index < difficultyLevel
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "fill-gray-200 text-gray-200"
-                    }`}
+                    className={`w-6 h-6 ${index < difficultyLevel
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-gray-200 text-gray-200"
+                      }`}
                   />
                 ))}
               </div>
@@ -151,29 +151,22 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
             <div className="text-left space-y-4">
               <div>
                 <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
+                  DESCRIPTION
+                </h4>
+                <div className="text-[#757575] text-sm font-opensans leading-relaxed">
+                  <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}></span>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
                   INSTRUCTIONS
                 </h4>
                 <div className="text-[#757575] text-sm font-opensans leading-relaxed">
-                  {instruction}
+                  <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction) }}></span>
                 </div>
               </div>
 
-              {/* Benefits Section */}
-              <div>
-                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
-                  BENEFITS
-                </h4>
-                <ul className="space-y-3 text-[#757575] text-sm font-opensans list-disc pl-5">
-                  <li>
-                    Working on a puzzle reinforces connections between brain
-                    cells.
-                  </li>
-                  <li>
-                    Improves mental speed and is an effective way to improve
-                    short-term memory.
-                  </li>
-                </ul>
-              </div>
+
             </div>
           </div>
         </div>
@@ -290,20 +283,24 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
                 />
               </button>
               <div className="flex gap-2">
-                <div onClick={() => handleLikeOrDislike(1)}>
+                <div onClick={() => {
+                  if (like === 1) return;
+                  else handleLikeOrDislike(1)
+                }}>
                   <Icon
                     name={"like"}
-                    className={`w-8 h-8 cursor-pointer ${
-                      like === 1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                    }`}
+                    className={`w-8 h-8 cursor-pointer ${like === 1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
+                      }`}
                   />
                 </div>
-                <div onClick={() => handleLikeOrDislike(-1)}>
+                <div onClick={() => {
+                  if (like === -1) return;
+                  else handleLikeOrDislike(-1)
+                }}>
                   <Icon
                     name={"dislike"}
-                    className={`w-8 h-8 cursor-pointer ${
-                      like === -1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                    }`}
+                    className={`w-8 h-8 cursor-pointer ${like === -1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
+                      }`}
                   />
                 </div>
               </div>
@@ -314,21 +311,15 @@ function PuzzleSolutionViewer({ puzzle, onBack, challengeId, date }) {
               // Submitted puzzle styling - matches PlaySubjectiveChallenge.jsx
               <div className="border-4 rounded-lg border-[#4676FA] border-opacity-20 p-6 font-poppins font-semibold">
                 <span className="text-2xl underline mb-2 block">Question</span>
-                <p className="text-2xl">
-                  {puzzleDetail.question ||
-                    puzzleDetail.description ||
-                    "Question not available"}
-                </p>
+                <div className="text-2xl" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(puzzleDetail.question || puzzleDetail.description || "Question not available") }}>
+                </div>
               </div>
             ) : (
               // Non-submitted puzzle styling - original styling
               <div className="flex flex-col border border-[#000000] border-opacity-[0.12] shadow-sm rounded-lg font-poppins items-center justify-center p-4">
-                <p className="text-center self-start">Question: </p>
-                <p className="self-start text-gray-600 font-opensans">
-                  {puzzleDetail.question ||
-                    puzzleDetail.description ||
-                    "Question not available"}
-                </p>
+                <p className="text-center self-start font-medium">Question: </p>
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(puzzleDetail.question || puzzleDetail.description || "Question not available") }}>
+                </div>
               </div>
             )}
           </div>

@@ -29,7 +29,7 @@ function LeaderboardListItem({ player, currentUser }) {
             />
           </div>
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-sm sm:text-lg font-medium text-gray-800 truncate">
+            <span className="text-sm sm:text-lg font-medium text-gray-800 truncate w-24 sm:w-60 md:w-72 lg:w-96">
               {player.username}
               {currentUser?.rank === player.rank && " (Me)"}
             </span>
@@ -87,7 +87,7 @@ function CurrentWeekLeaderboard({ challengeId }) {
       (player) => player.score !== null && player.score !== undefined
     );
   return (
-    <div className="py-2 sm:py-4 flex flex-col gap-3 sm:gap-4 px-4 sm:px-0">
+    <div className="py-2 sm:py-4 flex flex-col gap-3 sm:gap-4 px-0 sm:px-0">
       {/* <Leaderboard /> */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 font-poppins shadow-sm border border-[#E5E7EB] max-w-5xl mx-auto w-full">
         <div className="flex items-center justify-between">

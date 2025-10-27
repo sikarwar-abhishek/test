@@ -45,14 +45,14 @@ export default function SideBar() {
       {/* Header */}
       <div className="p-6">
         <div className="flex items-center gap-4">
-          <div className="relative aspect-square w-38 h-10">
+          <Link href="/home" className="relative aspect-square w-38 h-10">
             <Image
               src={"/asset/logo-black.png"}
               alt="logo"
               fill
               className="object-contain"
             />
-          </div>
+          </Link>
         </div>
       </div>
 
@@ -107,7 +107,7 @@ export default function SideBar() {
               Welcome back 👋
             </p>
             <div className="flex items-center gap-2">
-              <span className="font-medium font-poppins text-sm text-black">
+              <span className="font-medium font-poppins text-sm text-black whitespace-nowrap truncate overflow-hidden text-ellipsis w-40">
                 {value?.first_name} {value?.last_name}
               </span>
             </div>

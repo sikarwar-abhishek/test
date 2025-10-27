@@ -6,6 +6,7 @@ import ChallengeStart from "./ChallengeStart";
 import Link from "next/link";
 import useQueryHandler from "@/src/hooks/useQueryHandler";
 import { getChallengesList } from "@/src/api/challenges";
+import Spinner from "../../common/Spinner";
 
 function LogicChallenges({ challengeId }) {
   const {
@@ -14,10 +15,16 @@ function LogicChallenges({ challengeId }) {
     error,
   } = useQueryHandler(getChallengesList, {
     queryKey: ["challengesList", challengeId],
+    staleTime: 0,
     query: challengeId,
   });
 
-  if (isLoading) return <p>Loading..</p>;
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex-1 justify-center place-content-center">
+        <Spinner />
+      </div>
+    );
   if (error)
     return (
       <div className="flex flex-1 max-h-screen overflow-auto">
@@ -38,39 +45,50 @@ function LogicChallenges({ challengeId }) {
   };
 
   return (
-    <div className="flex flex-1 max-h-screen overflow-auto">
-      <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
+    <div className="flex flex-1 max-h-screen overflow-hidden">
+      <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col bg-background">
+
+        {/* Non-scrollable Header */}
         <HomePageHeader backBtn text={name} />
 
-        <div className="flex flex-col justify-center  md:w-[800px] lg:w-[1000px] w-full mx-auto">
-          <div className="flex gap-2 sm:gap-6 flex-col sm:flex-row">
-            <Link
-              href={`/challenges/${challengeId}/leaderboard`}
-              className="relative h-32 sm:flex-1 sm:min-h-44 sm:aspect-video"
-            >
-              <Image
-                fill
-                src={"/asset/leaderboard.png"}
-                alt="leaderboard"
-                className="w-full h-full object-contain sm:object-fill"
-              />
-            </Link>
-            <Link
-              href={`/solution/${challengeId}/previous`}
-              className="relative h-32 sm:flex-1 sm:min-h-44 sm:aspect-video"
-            >
-              <Image
-                fill
-                src={"/asset/previous-challenges.png"}
-                alt="previous challenges"
-                className="w-full h-full object-contain sm:object-fill"
-              />
-            </Link>
+        {/* Scrollable content container */}
+        <div className="flex-1 overflow-auto mt-6 flex flex-col gap-12 no-scrollbar">
+          <div className="flex flex-col justify-center w-full max-w-[1100px] mx-auto">
+            <div className="flex gap-2 sm:gap-6 flex-col sm:flex-row select-none">
+              <Link
+                href={`/challenges/${challengeId}/leaderboard`}
+                className="w-full sm:flex-1"
+              >
+                <Image
+                  src={"/asset/leaderboard.png"}
+                  alt="leaderboard"
+                  width={800}
+                  height={450}
+                  className="w-full h-auto rounded-lg"
+                />
+              </Link>
+              <Link
+                href={`/solution/${challengeId}/previous`}
+                className="w-full sm:flex-1"
+              >
+                <Image
+                  src={"/asset/previous-challenges.png"}
+                  alt="previous challenges"
+                  width={800}
+                  height={450}
+                  className="w-full h-auto rounded-lg"
+                />
+              </Link>
+            </div>
+            <ChallengeStart challengeId={challengeId} puzzles={puzzles} />
           </div>
-          <ChallengeStart challengeId={challengeId} puzzles={puzzles} />
         </div>
+
+
+
       </div>
     </div>
+
   );
 }
 

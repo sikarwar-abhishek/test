@@ -188,7 +188,7 @@ function PracticePuzzleFlow() {
                 transition-all duration-300 ease-in-out
                 hover:-translate-y-1 hover:shadow-md hover:shadow-blue-400/40"
             >
-              Back to Practice
+              OK
             </button>
           </div>
         </div>
@@ -230,10 +230,10 @@ function PracticePuzzleFlow() {
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
         <HomePageHeader text={puzzleTitle} backBtn />
 
-        <div className="flex flex-col gap-4 overflow-auto no-scrollbar pb-4">
+        <div className="flex flex-col gap-4 overflow-auto no-scrollbar pb-2">
           {/* Progress indicator */}
           <div className="flex justify-end">
-            <div className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold">
+            <div className="bg-blue-500 -mb-12 self-end text-white px-4 py-2 rounded-lg font-semibold">
               {currentPuzzleIndex + 1}/{totalPuzzles}
             </div>
           </div>

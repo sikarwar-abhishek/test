@@ -46,6 +46,10 @@ function RecommendedSection() {
       const challengeId = actionUrl.match(/\/api\/challenges\/(\d+)\//)?.[1];
       return challengeId ? `/challenges/${challengeId}` : "/challenges";
     }
+    if (actionUrl.includes("/api/training/daily-puzzles/")) {
+      // const challengeId = actionUrl.match(/api\/training\/(\d+)\//)?.[1];
+      return "/practice";
+    }
 
     if (actionUrl.includes("/api/lounge-posts/")) {
       const postId = actionUrl.match(/\/api\/lounge-posts\/(\d+)\//)?.[1];
@@ -61,10 +65,10 @@ function RecommendedSection() {
     return actionUrl.startsWith("/api/") ? "#" : actionUrl;
   };
   return (
-    <div className="flex gap-8 flex-col md:flex-row sm:mt-6 overflow-auto no-scrollbar">
+    <div className="flex gap-8 flex-col md:flex-row sm:mt-6 overflow-auto no-scrollbar pb-24 sm:pb-0">
       {/* left section side */}
       <div className="flex flex-col gap-4 flex-1">
-        <div className="z-20 space-y-4 p-4 rounded-2xl shadow-md text-[15px] bg-[#4676FA05]">
+        <div className="z-20 space-y-4 sm:p-4 rounded-2xl shadow-md text-[15px] bg-[#4676FA05]">
           {isLoading ? (
             // Loading skeleton
             <div className="space-y-4">

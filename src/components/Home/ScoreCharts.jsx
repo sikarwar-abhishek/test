@@ -38,7 +38,7 @@ export function ScoreChart({ title, children, tooltip = "" }) {
     setIsMobile(window.matchMedia("(pointer: coarse)").matches);
   }, []);
   return (
-    <div className="w-full z-30 min-h-80 h-80 rounded-2xl shadow-sm drop-shadow-sm border p-6">
+    <div className={`z-100 w-full z-30 min-h-80 rounded-2xl shadow-sm drop-shadow-sm border p-6 ${title === 'Training Submissions' && 'h-80'}`}>
       <div className="flex justify-between">
         <h3 className="text-lg font-semibold font-monserrat mb-4">{title}</h3>
         <TooltipProvider delayDuration={100}>
@@ -64,7 +64,7 @@ export function ScoreChart({ title, children, tooltip = "" }) {
           </TextToolTip>
         </TooltipProvider>
       </div>
-      <div className="h-[calc(100%-3rem)]">{children}</div>
+      <div className="h-[calc(100%-3rem)] z-200">{children}</div>
     </div>
   );
 }
@@ -146,7 +146,7 @@ export default function ScoreCharts({ bestPuzzleType, tooltips, charts }) {
       </ScoreChart>
       <div className="flex gap-6 sm:col-span-2">
         <ScoreChart title="Proficiency Score" tooltip={proficiencyScore}>
-          <div className="w-full h-full flex flex-col sm:flex-row gap-24 sm:gap-12">
+          <div className="w-full h-full flex flex-col sm:flex-row gap-16 sm:gap-12">
             <div className="w-full sm:w-[calc(36dvw)] min-h-44 font-opensans">
               <p className="text-sm text-gray-600  -mt-4 mb-3">
                 {"Best Proficiency in Puzzle type : "}
@@ -159,7 +159,7 @@ export default function ScoreCharts({ bestPuzzleType, tooltips, charts }) {
                 dataKey={"puzzleProficiency"}
               />
             </div>
-            <div className="w-full sm:w-[calc(36dvw)] min-h-44 h-full ">
+            <div className="w-full sm:w-[calc(36dvw)] min-h-44 mb-4 h-full">
               <p className="text-sm font-opensans text-gray-600 -mt-4 mb-3">
                 {"Overall Proficiency"}
               </p>

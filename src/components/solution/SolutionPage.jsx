@@ -48,7 +48,10 @@ function SolutionPage({ challengeId }) {
     router.push(`/solution/${challengeId}/previous/view?date=${date}`);
   };
 
-  if (isLoading) return <Spinner />;
+  if (isLoading)
+    <div className="min-h-screen flex-1 place-content-center">
+      <Spinner />
+    </div>;
 
   if (isError) {
     return (
@@ -73,7 +76,7 @@ function SolutionPage({ challengeId }) {
       <div className="relative min-h-screen sm:px-10 px-4 py-6 flex-1 flex flex-col gap-12 bg-background">
         <HomePageHeader backBtn text={"Previous Challenges Solutions"} />
 
-        <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full p-4 border border-gray-200 rounded-xl shadow-sm overflow-auto no-scrollbar">
+        <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full sm:p-4 p-2 border border-gray-200 rounded-xl shadow-sm overflow-auto no-scrollbar">
           {allChallenges.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No previous challenges available
@@ -89,7 +92,7 @@ function SolutionPage({ challengeId }) {
                   className="flex items-center justify-between border-b last:border-none py-2 cursor-pointer group"
                 >
                   <div className="flex items-center gap-4 hover:text-blue-500">
-                    <div className="p-3 rounded-lg">
+                    <div className="sm:p-3 p-2 rounded-lg">
                       <Calendar className="w-7 h-7 group-hover:text-blue-500" />
                     </div>
                     <div className="flex flex-col gap-2 font-rubik">

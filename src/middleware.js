@@ -22,28 +22,27 @@ export function middleware(request) {
   );
 
   const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(route)
+    (route) => pathname.startsWith(route)
   );
 
-  if (!token) {
-    if (isProtectedRoute) {
-      const signinUrl = new URL("/login", request.url);
-      signinUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(signinUrl);
-    }
-
-    if (isPublicRoute) {
-      return NextResponse.next();
-    }
-  }
-
   if (token) {
-    if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/home", request.url));
+    if (pathname === "/login" || pathname === "/") {
+      return NextResponse.redirect(new URL("/challenges", request.url));
     }
 
     return NextResponse.next();
   }
+  // if (!token) {
+  //   if (isProtectedRoute) {
+  //     return NextResponse.redirect(new URL("/login", request.url));
+  //   }
+
+  //   if (isPublicRoute) {
+  //     return NextResponse.next();
+  //   }
+  // }
+
+
 
   return NextResponse.next();
 }

@@ -8,7 +8,7 @@ import { puzzleFeedback } from "@/src/api/feedback";
 import { useMutationHandler } from "@/src/hooks/useMutationHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-
+import DOMPurify from "dompurify";
 function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
   const puzzleDetail = puzzle.puzzleDetail || puzzle;
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
@@ -37,7 +37,7 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
           date,
         ]);
       }
-      toast.success("feedback submitted successfully.");
+      toast.success("Feedback submitted successfully.");
     },
     onError: (error) => {
       console.error("Error sending feedback:", error);
@@ -100,7 +100,7 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
 
   // Instructions Popup Component
   const InstructionsPopup = () => {
-    const { instruction, difficultyLevel } = puzzle;
+    const { instruction, description, difficultyLevel } = puzzle;
     const maxStars = 5;
 
     return (
@@ -138,11 +138,10 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
                 {[...Array(maxStars)].map((_, index) => (
                   <Star
                     key={index}
-                    className={`w-6 h-6 ${
-                      index < difficultyLevel
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "fill-gray-200 text-gray-200"
-                    }`}
+                    className={`w-6 h-6 ${index < difficultyLevel
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-gray-200 text-gray-200"
+                      }`}
                   />
                 ))}
               </div>
@@ -156,29 +155,22 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
             <div className="text-left space-y-4">
               <div>
                 <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
+                  DESCRIPTION
+                </h4>
+                <div className="text-[#757575] text-sm font-opensans leading-relaxed">
+                  <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}></span>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
                   INSTRUCTIONS
                 </h4>
                 <div className="text-[#757575] text-sm font-opensans leading-relaxed">
-                  {instruction}
+                  <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction) }}></span>
                 </div>
               </div>
 
-              {/* Benefits Section */}
-              <div>
-                <h4 className="text-lg font-semibold font-monserrat text-black mb-3">
-                  BENEFITS
-                </h4>
-                <ul className="space-y-3 text-[#757575] text-sm font-opensans list-disc pl-5">
-                  <li>
-                    Working on a puzzle reinforces connections between brain
-                    cells.
-                  </li>
-                  <li>
-                    Improves mental speed and is an effective way to improve
-                    short-term memory.
-                  </li>
-                </ul>
-              </div>
+
             </div>
           </div>
         </div>
@@ -186,19 +178,45 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
     );
   };
 
+  // Parse grid size from puzzleDetail
+  const getGridSize = () => {
+    const gridSizeStr = puzzleDetail.grid_size || "9,9";
+    const [rows, cols] = gridSizeStr.split(",").map(num => parseInt(num.trim()));
+    return { rows, cols };
+  };
+
+  const { rows: gridRows, cols: gridCols } = getGridSize();
+
+  // Get cage information
+  const cageSuperscripts = puzzleDetail.cage_superscripts || [];
+  const cageBorders = puzzleDetail.cage_borders || {};
+
+  // Get cage superscript for a cell
+  const getCageSuperscript = (row, col) => {
+    const cellKey = `${row}_${col}`;
+    const superscript = cageSuperscripts.find((cage) => cage.cell === cellKey);
+    return superscript ? superscript.text : null;
+  };
+
+  // Get cage borders for a cell
+  const getCageBorders = (row, col) => {
+    const cellKey = `${row}${col}`;
+    return cageBorders[cellKey] || [];
+  };
+
   // Parse grid data - assuming it's stored as string or array
   const parseGrid = (gridData) => {
     if (!gridData)
-      return Array(9)
+      return Array(gridRows)
         .fill()
-        .map(() => Array(9).fill(""));
+        .map(() => Array(gridCols).fill(""));
 
     if (typeof gridData === "string") {
-      // If it's a string like "123456789012345678901234567890123456789012345678901234567890123456789012345678901"
+      // If it's a string, convert to 2D array based on grid size
       const chars = gridData.split("");
       const grid = [];
-      for (let i = 0; i < 9; i++) {
-        grid.push(chars.slice(i * 9, (i + 1) * 9));
+      for (let i = 0; i < gridRows; i++) {
+        grid.push(chars.slice(i * gridCols, (i + 1) * gridCols));
       }
       return grid;
     }
@@ -208,9 +226,9 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
       return gridData;
     }
 
-    return Array(9)
+    return Array(gridRows)
       .fill()
-      .map(() => Array(9).fill(""));
+      .map(() => Array(gridCols).fill(""));
   };
 
   const userGrid = parseGrid(puzzleDetail.user_answer_grid);
@@ -230,13 +248,25 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
   // Check if user's answer matches correct answer for a cell
   const isCellCorrect = (row, col) => {
     if (!userGrid[row] || !correctGrid[row]) return false;
-    return userGrid[row][col] === correctGrid[row][col];
+    return userGrid[row][col] == correctGrid[row][col] || userGrid[row][col] === "";
   };
 
   // Get cell styling based on correctness and initial state
   const getCellStyle = (row, col, isUserGrid = true) => {
-    const baseStyle =
-      "w-8 h-8 border border-gray-400 flex items-center justify-center text-sm font-semibold";
+    const borders = getCageBorders(row, col);
+    let borderStyles = "border border-gray-400";
+
+    // Apply cage borders - use thick black borders for cage boundaries
+    if (borders.includes("U")) borderStyles += " border-t-2 border-t-black";
+    if (borders.includes("B")) borderStyles += " border-b-2 border-b-black";
+    if (borders.includes("L")) borderStyles += " border-l-2 border-l-black";
+    if (borders.includes("R")) borderStyles += " border-r-2 border-r-black";
+
+    // Responsive cell sizing
+    const sizeClasses = "w-12 h-12 sm:w-10 sm:h-10 md:w-12 md:h-12";
+    const textClasses = "text-sm sm:text-base md:text-lg lg:text-xl";
+
+    const baseStyle = `${sizeClasses} ${borderStyles} flex items-center justify-center ${textClasses} font-semibold relative`;
 
     if (isInitialCell(row, col)) {
       return `${baseStyle} bg-gray-100 text-gray-800`; // Initial puzzle cells
@@ -244,48 +274,44 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
 
     if (isUserGrid && puzzle.is_submitted) {
       if (isCellCorrect(row, col)) {
-        return `${baseStyle} bg-green-100 text-green-800`; // Correct user input
+        return `${baseStyle}`; // Correct user input
       } else {
-        return `${baseStyle} bg-red-100 text-red-800`; // Incorrect user input
+        return `${baseStyle} bg-red-400 text-black`; // Incorrect user input
       }
     }
 
     return `${baseStyle} bg-white text-gray-800`; // Default or correct solution
   };
 
-  // Render a 9x9 Sudoku grid
+
+  // Render a Sudoku grid with dynamic size
   const renderGrid = (grid, title, isUserGrid = false) => (
     <div className="space-y-2">
-      <h3 className="font-medium font-poppins text-gray-900 text-center">
+      <h3 className="text-xl font-semibold font-poppins text-center mb-4">
         {title}
       </h3>
       <div className="flex justify-center">
-        <div className="inline-block border-2 border-black">
-          {[0, 1, 2].map((blockRow) => (
-            <div key={blockRow} className="flex">
-              {[0, 1, 2].map((blockCol) => (
-                <div key={blockCol} className="border border-black">
-                  {[0, 1, 2].map((cellRow) => (
-                    <div key={cellRow} className="flex">
-                      {[0, 1, 2].map((cellCol) => {
-                        const row = blockRow * 3 + cellRow;
-                        const col = blockCol * 3 + cellCol;
-                        const value =
-                          grid[row] && grid[row][col] ? grid[row][col] : "";
+        <div className="border-2 border-black">
+          {Array.from({ length: gridRows }, (_, row) => (
+            <div key={row} className="flex">
+              {Array.from({ length: gridCols }, (_, col) => {
+                const value = grid[row] && grid[row][col] ? grid[row][col] : "";
+                const superscript = getCageSuperscript(row, col);
 
-                        return (
-                          <div
-                            key={cellCol}
-                            className={getCellStyle(row, col, isUserGrid)}
-                          >
-                            {value === "0" ? "" : value}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              ))}
+                return (
+                  <div
+                    key={col}
+                    className={getCellStyle(row, col, isUserGrid)}
+                  >
+                    {superscript && (
+                      <div className="absolute top-0.5 left-0.5 font-poppins text-xs sm:text-[13px] text-blue-600 font-bold leading-none">
+                        {superscript}
+                      </div>
+                    )}
+                    <span>{value === "0" ? "" : value}</span>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -295,7 +321,7 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
 
   const renderSolutionFeedback = () => {
     // If puzzle was submitted and correct
-    if (puzzle.is_submitted && puzzle.is_correct) {
+    if (puzzle.is_submitted && puzzle.correct) {
       return (
         <div className="space-y-6">
           <div className="flex items-center gap-2 justify-center">
@@ -316,7 +342,7 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
     }
 
     // If puzzle was submitted but incorrect
-    if (puzzle.is_submitted && !puzzle.is_correct) {
+    if (puzzle.is_submitted && !puzzle.correct) {
       return (
         <div className="space-y-6">
           <div className="flex items-center gap-2 justify-center">
@@ -377,20 +403,24 @@ function GridSolutionViewer({ puzzle, onBack, challengeId, date }) {
                 />
               </button>
               <div className="flex gap-2">
-                <div onClick={() => handleLikeOrDislike(1)}>
+                <div onClick={() => {
+                  if (like === 1) return;
+                  else handleLikeOrDislike(1)
+                }}>
                   <Icon
                     name={"like"}
-                    className={`w-8 h-8 cursor-pointer ${
-                      like === 1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
-                    }`}
+                    className={`w-8 h-8 cursor-pointer ${like === 1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
+                      }`}
                   />
                 </div>
-                <div onClick={() => handleLikeOrDislike(-1)}>
+                <div onClick={() => {
+                  if (like === -1) return;
+                  else handleLikeOrDislike(-1)
+                }}>
                   <Icon
                     name={"dislike"}
-                    className={`w-8 h-8 cursor-pointer ${
-                      like === -1 ? "text-red-500" : "text-[#A3A3A3]"
-                    }`}
+                    className={`w-8 h-8 cursor-pointer ${like === -1 ? "text-[#4676FA]" : "text-[#A3A3A3]"
+                      }`}
                   />
                 </div>
               </div>

@@ -25,8 +25,9 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
     watch,
     setError,
     clearErrors,
+    trigger,
   } = form;
-  const { errors } = formState;
+  const { errors, isValid } = formState;
 
   // Watch form values to validate selections
   const locationValue = watch("location");
@@ -124,7 +125,7 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
       </FormRow>
 
       {/* Location Field */}
-      <FormRow error={errors?.location?.message}>
+      {/* <FormRow error={errors?.location?.message}>
         <label
           htmlFor="location"
           className="block font-poppins text-gray-700 mb-2"
@@ -223,7 +224,7 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
             )}
           />
         </div>
-      </FormRow>
+      </FormRow> */}
 
       {/* Job Profile Field */}
       <FormRow error={errors?.job_profile?.message}>
@@ -231,12 +232,21 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
           htmlFor="jobProfile"
           className="block font-poppins text-gray-700 mb-2"
         >
-          Job Profile
+          Job Profile*
         </label>
         <div className="relative">
           <Controller
             name="job_profile"
             control={control}
+            rules={{
+              validate: (value) => {
+                if (value && !AVAILABLE_JOBPROFILES.includes(value) || !value) {
+                  return "Please select a valid job profile from the list";
+                }
+                return true;
+              },
+              onChange: () => trigger("job_profile"),
+            }}
             render={({ field: { onChange, value, name } }) => (
               <>
                 <input
@@ -249,9 +259,9 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
                     setJobProfileQuery(inputValue);
 
                     // Clear any existing timeout
-                    if (jobProfileClearTimeout) {
-                      clearTimeout(jobProfileClearTimeout);
-                    }
+                    // if (jobProfileClearTimeout) {
+                    //   clearTimeout(jobProfileClearTimeout);
+                    // }
 
                     // Only update form value if it's a valid selection
                     if (AVAILABLE_JOBPROFILES.includes(inputValue)) {
@@ -261,23 +271,23 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
                       onChange("");
 
                       // Set timeout to clear input if no valid selection after 2 seconds
-                      if (inputValue.length > 0) {
-                        const timeout = setTimeout(() => {
-                          const hasMatch = AVAILABLE_JOBPROFILES.some(
-                            (profile) =>
-                              profile
-                                .toLowerCase()
-                                .includes(inputValue.toLowerCase())
-                          );
-                          if (!hasMatch) {
-                            setJobProfileQuery("");
-                          }
-                        }, 2000);
-                        setJobProfileClearTimeout(timeout);
-                      }
+                      // if (inputValue.length > 0) {
+                      //   const timeout = setTimeout(() => {
+                      //     const hasMatch = AVAILABLE_JOBPROFILES.some(
+                      //       (profile) =>
+                      //         profile
+                      //           .toLowerCase()
+                      //           .includes(inputValue.toLowerCase())
+                      //     );
+                      //     if (!hasMatch) {
+                      //       setJobProfileQuery("");
+                      //     }
+                      //   }, 2000);
+                      //   setJobProfileClearTimeout(timeout);
+                      // }
                     }
 
-                    setShowJobProfileDropdown(inputValue.length > 0);
+                    setShowJobProfileDropdown(true);
                   }}
                   onFocus={() => {
                     setShowJobProfileDropdown(true);
@@ -294,9 +304,8 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
                       }
                     }, 200);
                   }}
-                  className={`w-full px-4 py-3 font-inter border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80] ${
-                    errors?.job_profile ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className={`w-full px-4 py-3 font-inter border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80] ${errors?.job_profile ? "border-red-500" : "border-gray-300"
+                    }`}
                 />
                 {showJobProfileDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -334,7 +343,7 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
           htmlFor="goals"
           className="block font-poppins text-gray-700 mb-2"
         >
-          Goals*
+          Goals
         </label>
         <Controller
           name="goals"
@@ -355,9 +364,9 @@ function StepTwo({ isPending, goals, form, onSubmit }) {
 
       {/* Finish Button */}
       <button
-        disabled={isPending}
+        disabled={isPending || !isValid}
         type="submit"
-        className="w-full bg-white text-blue-500 border border-blue-500 py-2 px-4 rounded-lg font-semibold font-poppins hover:bg-blue-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-white text-blue-500 border border-blue-500 py-2 px-4 rounded-lg font-semibold font-poppins hover:bg-blue-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-white flex items-center justify-center gap-2"
       >
         {isPending && (
           <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>

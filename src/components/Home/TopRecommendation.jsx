@@ -60,12 +60,12 @@ function TopRecommendation() {
             <div className="relative aspect-square w-full rounded-lg p-2 max-h-48">
               <div className="relative w-full h-full rounded-xl overflow-hidden">
                 <Image
-                  src={challenge?.imageSrc || "/asset/mug.jpg"}
+                  src={challenge?.imageSrc || "/asset/puzzle.jpg"}
                   alt={challenge?.title}
                   fill
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-black/30 z-10"></div>
+                <div className="absolute inset-0 z-10"></div>
               </div>
             </div>
 

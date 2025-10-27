@@ -7,6 +7,7 @@ import Instructions from "./Instructions";
 import { useState, useEffect } from "react";
 import { redirect, RedirectType, useRouter } from "next/navigation";
 import PlaySubjectiveChallenge from "./PlaySubjectiveChallenge";
+import Spinner from "../../common/Spinner";
 
 function Subjective({ challengeId, puzzleId }) {
   const router = useRouter();
@@ -20,7 +21,7 @@ function Subjective({ challengeId, puzzleId }) {
     query: challengeId,
   });
 
-  if (isLoading) return <p>Loading..</p>;
+  if (isLoading) return <Spinner />;
   if (error) return <p> Error</p>;
   if (challengesList.puzzles.length < 1)
     redirect(`/challenges/${challengeId}/`, RedirectType.replace);

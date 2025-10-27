@@ -78,7 +78,11 @@ function PreviousWeekLeaderboard({ challengeId }) {
   }
 
   const allLeaderboards = data?.pages?.flatMap((page) => page.results) || [];
-
+  if (allLeaderboards.length < 1) return <div className="flex items-center justify-center flex-1 py-12 sm:py-20 px-4">
+    <h2 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold font-poppins text-gray-400 text-center">
+      No leaderboard available
+    </h2>
+  </div>
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full p-4 border border-gray-200 rounded-xl shadow-sm mb-6">
       {/* Render all leaderboard items */}

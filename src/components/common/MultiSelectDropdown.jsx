@@ -55,6 +55,7 @@ export default function MultiSelectDropdown({
   return (
     <div className="relative" ref={containerRef}>
       <div
+        tabIndex={0}
         className={`w-full min-h-[48px] px-4 py-3 pr-12 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus-within:border-transparent outline-none transition-all  bg-[#E7EEFF80] cursor-pointer ${className}`}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -86,9 +87,8 @@ export default function MultiSelectDropdown({
 
         {/* Dropdown Arrow */}
         <ChevronDown
-          className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none transition-transform ${isOpen ? "rotate-180" : ""
+            }`}
         />
       </div>
 
@@ -99,11 +99,10 @@ export default function MultiSelectDropdown({
             <div
               key={option.value}
               onClick={() => handleOptionSelect(option.value)}
-              className={`px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
-                value.includes(option.value)
+              className={`px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${value.includes(option.value)
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-700"
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-inter">{option.label}</span>

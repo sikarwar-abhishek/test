@@ -35,8 +35,7 @@ function LoginForm({ setCurrentStep, form }) {
     setCurrentStep(1);
   };
 
-  const handleGoogleLogin = () => {
-  };
+  const handleGoogleLogin = () => {};
 
   return (
     <div className="w-full">
@@ -108,7 +107,7 @@ function LoginForm({ setCurrentStep, form }) {
             </motion.button>
 
             {/* Divider */}
-            <div className="relative my-6">
+            {/* <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -117,10 +116,10 @@ function LoginForm({ setCurrentStep, form }) {
                   OR
                 </span>
               </div>
-            </div>
+            </div> */}
 
             {/* Social Login Buttons */}
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <button
                 type="button"
                 onClick={handleGoogleLogin}
@@ -148,7 +147,7 @@ function LoginForm({ setCurrentStep, form }) {
                   Login with Google
                 </span>
               </button>
-            </div>
+            </div> */}
           </Form>
         </motion.div>
       </AnimatePresence>

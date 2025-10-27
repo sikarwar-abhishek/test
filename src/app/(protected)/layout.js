@@ -13,7 +13,6 @@ import {
   rubik,
   segeo,
 } from "@/src/app/fonts";
-import SideBar from "@/src/components/common/SideBar";
 import ProtectedLayoutWrapper from "@/src/components/ProtectedLayoutWrapper";
 
 export const metadata = {

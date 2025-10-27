@@ -30,7 +30,7 @@ function LeaderboardItem({ player }) {
           />
         </div>
 
-        <span className="text-gray-800 font-medium">{player.name}</span>
+        <span className="text-gray-800 font-medium whitespace-nowrap text-ellipsis max-w-32 overflow-hidden">{player.name}</span>
       </div>
 
       <span className="text-gray-500 text-sm">

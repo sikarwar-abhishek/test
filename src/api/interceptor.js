@@ -7,10 +7,7 @@ const headers = {
 };
 
 export const setAuthToken = (token) => {
-  Cookies.set("authToken", token, {
-    secure: process.env.NEXT_PUBLIC_MODE === "development",
-    sameSite: "Lax",
-  });
+  Cookies.set("authToken", token);
 };
 
 export const getToken = () => Cookies.get("authToken");
@@ -19,6 +16,10 @@ export const getRefreshToken = () => {
   return Cookies.get("refresh_token");
 };
 
+export const removeAllToken = ()=> {
+  Cookies.remove('authToken');
+  Cookies.remove('refresh_token');
+}
 const api = axios.create({
   baseURL: BASE_URL,
   headers,
@@ -65,7 +66,8 @@ api.interceptors.response.use(
       if (!refreshToken) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        // window.location.href = "/login";
+        removeAllToken();
+        window.location.href = "/login";
         return Promise.reject(error);
       }
 

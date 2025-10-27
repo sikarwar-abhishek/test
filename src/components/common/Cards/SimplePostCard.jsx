@@ -23,7 +23,7 @@ function SimplePostCard({
         />
       </div>
       <div className="flex-1 min-w-0 font-poppins">
-        <p className="text-foreground flex flex-col gap-2 text-sm sm:text-base">
+        <p className="text-foreground flex flex-col gap-2 pr-4 text-sm sm:text-base">
           {authorName && (
             <>
               <span className="font-semibold">{authorName}</span>
@@ -33,20 +33,23 @@ function SimplePostCard({
           {!authorName && postTitle && <>New post: &quot;{postTitle}&quot;</>}
           {!authorName && !postTitle && <>New post available</>}
         </p>
-        {showAction && (
-          <Link
-            href={postUrl}
-            className="text-blue-500 hover:underline font-medium text-xs sm:text-sm mt-1 inline-block"
-          >
-            {actionText}
-          </Link>
-        )}
+        <div className="flex flex-1 justify-between  mt-1">
+          {showAction && (
+            <Link
+              href={postUrl}
+              className="text-blue-500 hover:underline font-medium text-xs sm:text-sm inline-block"
+            >
+              {actionText}
+            </Link>
+          )}
+          {timestamp && (
+            <span className="text-muted-foreground text-xs sm:text-sm flex-shrink-0">
+              {timestamp}
+            </span>
+          )}
+        </div>
       </div>
-      {timestamp && (
-        <span className="text-muted-foreground text-sm flex-shrink-0">
-          {timestamp}
-        </span>
-      )}
+
     </div>
   );
 }

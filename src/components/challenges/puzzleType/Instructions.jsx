@@ -1,8 +1,8 @@
 import { Star } from "lucide-react";
-import Markdown from "react-markdown";
+import DOMPurify from 'dompurify';
 
 export default function Instructions({ currentPuzzle, setPlay, onBack }) {
-  const { instruction, difficultyLevel, is_submitted } = currentPuzzle;
+  const { instruction,description, difficultyLevel, is_submitted } = currentPuzzle;
   const processEscapeSequences = (text) => {
     return text
       .replace(/\\n/g, "\n")
@@ -31,11 +31,10 @@ export default function Instructions({ currentPuzzle, setPlay, onBack }) {
             {[...Array(maxStars)].map((_, index) => (
               <Star
                 key={index}
-                className={`w-9 h-9 ${
-                  index < difficultyLevel
+                className={`w-9 h-9 ${index < difficultyLevel
                     ? "fill-yellow-400 text-yellow-400"
                     : "fill-gray-200 text-gray-200"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -49,31 +48,36 @@ export default function Instructions({ currentPuzzle, setPlay, onBack }) {
 
           {/* Instructions Section */}
           <div className="text-left space-y-6">
+               <div>
+              <h3 className="text-lg font-semibold font-monserrat text-black mb-2">
+                DESCRIPTION
+              </h3>
+              <div className="space-y-4 text-[#757575] text-sm font-opensans">
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(
+                      description
+                    ),
+                  }}
+                ></span>
+              </div>
+            </div>
             <div>
               <h3 className="text-lg font-semibold font-monserrat text-black mb-2">
                 INSTRUCTIONS
               </h3>
               <div className="space-y-4 text-[#757575] text-sm font-opensans">
-                <Markdown>{processedInstructions}</Markdown>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(
+                      processedInstructions
+                    ),
+                  }}
+                ></span>
               </div>
             </div>
 
-            {/* Benefits Section */}
-            <div>
-              <h3 className="text-lg font-semibold font-monserrat text-black mb-2">
-                BENEFITS
-              </h3>
-              <ul className="space-y-4 text-[#757575] text-sm font-opensans list-disc px-4">
-                <li>
-                  Working on a puzzle reinforces connections between brain
-                  cells.
-                </li>
-                <li>
-                  Improves mental speed and is an effective way to improve
-                  short-term memory
-                </li>
-              </ul>
-            </div>
+           
           </div>
         </div>
       </div>

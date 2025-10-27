@@ -1,17 +1,17 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
-import DateInput from "../../common/DateInput";
 import Form from "../../common/Form";
 import FormRow from "../../common/FormRow";
-import isEmail from "validator/lib/isEmail";
 import { Controller } from "react-hook-form";
-import { isMobilePhone, isMobilePhoneLocales } from "validator";
+import SearchableCountryCodeDropdown from "../../common/SearchableCountryCodeDropdown";
 
 function StepOne({ handleNext, form }) {
-  const { register, control, handleSubmit, formState } = form;
-  const { errors } = formState;
+  const { register, handleSubmit, formState, control,trigger } = form;
+  const { errors, isValid } = formState;
 
   return (
-    <Form onSubmit={handleSubmit(handleNext)} className="">
+    <Form onSubmit={handleSubmit(handleNext)}>
       {/* First Name Field */}
       <FormRow error={errors?.first_name?.message}>
         <label
@@ -27,6 +27,7 @@ function StepOne({ handleNext, form }) {
           className="w-full px-4 py-3 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
           {...register("first_name", {
             required: "Please Enter Your First Name!",
+            onChange: () => trigger("first_name"),
           })}
         />
       </FormRow>
@@ -46,76 +47,100 @@ function StepOne({ handleNext, form }) {
           className="w-full px-4 py-3 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
           {...register("last_name", {
             required: "Please Enter Your Last Name!",
+            onChange: () => trigger("last_name"),
           })}
         />
       </FormRow>
 
-      {/* Email Field */}
-      <FormRow error={errors?.phone_number?.message}>
+      {/* Phone Number Field */}
+      <FormRow
+        error={errors?.phone_number?.message || errors?.country_code?.message}
+      >
         <label
           htmlFor="phone_number"
           className="block font-poppins text-gray-700 mb-2"
         >
           Phone Number*
         </label>
-        <input
-          id="phone_number"
-          type="tel"
-          placeholder="Type Here"
-          maxLength={10}
-          className="w-full px-4 py-3 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
-          {...register("phone_number", {
-            required: "Please Enter Your Phone Number!",
-            validate: (value) => {
-              // Check if it's exactly 10 digits
-              if (!/^\d{10}$/.test(value)) {
-                return "Phone number must be exactly 10 digits!";
-              }
-              // Additional validation using validator library for Indian mobile numbers
-              if (!isMobilePhone(value, "en-IN")) {
-                return "Please enter a valid phone number!";
-              }
-              return true;
-            },
-          })}
-          onInput={(e) => {
-            e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
-          }}
-        />
+        <div className="flex gap-2">
+          <Controller
+            name="country_code"
+            control={control}
+            rules={{
+              required: "Please select country code!",
+              onChange: () => trigger("country_code"),
+            }}
+            defaultValue="+91"
+            render={({ field: { onChange, value } }) => (
+              <SearchableCountryCodeDropdown
+                value={value}
+                onChange={onChange}
+                placeholder="+91"
+                className="max-w-20 sm:max-w-24 bg-[#E7EEFF80] border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              />
+            )}
+          />
+
+          <input
+            id="phone_number"
+            type="tel"
+            placeholder="Enter phone number"
+            className="max-w-fit sm:flex-1 sm:max-w-full px-4 py-3 font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
+            {...register("phone_number", {
+              required: "Please Enter Your Phone Number!",
+              validate: (value) => {
+                if (value.length > 17) {
+                  setValue("phone_number", value.slice(0, 17));
+                  return true;
+                }
+                if (value.length < 4)
+                  return "Minimum 4 digits required!";
+                return true;
+              },
+              onChange: () => trigger("phone_number"),
+            })}
+            onInput={(e) => {
+              e.target.value = e.target.value.replace(/[^0-9]/g, "");
+            }}
+          />
+        </div>
       </FormRow>
 
-      {/* Date of Birth Field */}
-      <FormRow error={errors?.DOB?.message}>
-        <label
-          htmlFor="dateOfBirth"
-          className="block font-poppins text-gray-700 mb-2"
-        >
-          Date of Birth*
+      {/* Age */}
+      <FormRow error={errors?.age?.message}>
+        <label htmlFor="age" className="block font-poppins text-gray-700 mb-2">
+          Age*
         </label>
-        <Controller
-          name="DOB"
-          control={control}
-          rules={{
-            required: "Date is required",
+        <input
+          id="age"
+          type="number"
+          placeholder="Enter Age"
+          onInput={(e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, "");
+            if (e.target.value.length > 2) {
+              e.target.value = e.target.value.slice(0, 2);
+            }
           }}
-          render={({ field: { onChange, value, name } }) => (
-            <DateInput
-              id={name}
-              value={value}
-              onChange={onChange}
-              placeholder="DD-MM-YYYY"
-              required
-              displayFormat="DD-MM-YYYY"
-              valueFormat="YYYY-MM-DD"
-            />
-          )}
+          className="w-full px-4 py-3 remove-inner-scroll font-inter border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-[#E7EEFF80]"
+          {...register("age", {
+            required: "Please Enter Your Age!",
+            valueAsNumber: true,
+            min: {
+              value: 1,
+              message: "Age must be at least 1",
+            },
+            max: {
+              value: 100,
+            },
+            onChange: () => trigger("age"),
+          })}
         />
       </FormRow>
-
       {/* Next Button */}
       <button
         type="submit"
-        className="w-full bg-white text-blue-500 border border-blue-500 py-2 px-4 rounded-lg font-semibold font-poppins hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+        disabled={!isValid}
+        className="w-full bg-white disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-white text-blue-500 border border-blue-500 py-2 px-4 rounded-lg font-semibold font-poppins hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
       >
         Next
         <ArrowRight size={20} />

@@ -6,6 +6,7 @@ import { ArrowRight, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import TopLeaderboard from "./TopLeaderboard";
+import Timer from "./Timer";
 
 const DIFFICULTY_MAP = {
   1: "Easy",
@@ -55,13 +56,13 @@ function RightSection() {
         <div className="bg-white rounded-xl p-4 shadow-sm border space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">What&apos;s New</h3>
-            <ArrowRight size={20} />
+            {/* <ArrowRight size={20} /> */}
           </div>
 
           <div className="relative rounded-xl overflow-hidden">
             <div className="relative h-48">
               <Image
-                src={daily_challenge.image || "/asset/mug.jpg"}
+                src={daily_challenge.image || "/asset/puzzle.jpg"}
                 alt={daily_challenge?.name}
                 fill
                 className="object-cover"
@@ -72,9 +73,10 @@ function RightSection() {
                     {daily_challenge?.name}
                   </h4>
                   <div className="flex items-center font-inter gap-2 text-white">
-                    <Clock size={16} />
+                    <Clock size={16} /> Time Left:
                     <span className="text-sm">
-                      {daily_challenge?.time_remaining}
+                      <Timer time={daily_challenge?.time_remaining} />
+                      {/* {daily_challenge?.time_remaining} */} 
                     </span>
                   </div>
                   <Link
@@ -91,7 +93,7 @@ function RightSection() {
       )}
 
       {/* Ongoing Challenge Section */}
-      {ongoing_challenge && (
+      {/* {ongoing_challenge && (
         <div className="bg-white rounded-xl p-4 shadow-sm border">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium">Ongoing Challenge</h3>
@@ -128,13 +130,13 @@ function RightSection() {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {recently_attempted && recently_attempted.length > 0 && (
         <div className="bg-white rounded-xl p-4 shadow-sm border space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Recently Attempted</h3>
-            <ArrowRight size={20} />
+            {/* <ArrowRight size={20} /> */}
           </div>
 
           {recently_attempted.map((challenge) => (
@@ -144,7 +146,7 @@ function RightSection() {
             >
               <div className="relative h-48 rounded-xl">
                 <Image
-                  src={challenge.image || "/asset/mug.jpg"}
+                  src={challenge.image || "/asset/puzzle.jpg"}
                   alt={challenge?.challenge_name}
                   fill
                   className="object-cover rounded-xl"

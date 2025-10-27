@@ -24,7 +24,7 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
     mutate: send,
     isPending: sendingOtp,
   } = useMutationHandler(sendOtp, {
-    onSuccess: async (response) => {},
+    onSuccess: async (response) => { },
   });
   const { mutate: verifyOtpMutation, isPending: isOtpVerifying } =
     useMutationHandler(verifyOtp, {
@@ -42,7 +42,7 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
               "user",
               JSON.stringify(response.data.user) || "null"
             );
-            router.push("/home");
+            router.push("/challenges");
           }
         }
       },
@@ -51,10 +51,24 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
     });
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && otpRef.current) {
+        otpRef.current.focus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Initial focus when component mounts
     if (otpRef.current) {
       otpRef.current.focus();
     }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
+
 
   // Timer for resend OTP
   useEffect(() => {
@@ -165,11 +179,10 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
         <button
           onClick={handleResendOtp}
           disabled={!canResend}
-          className={`font-semibold text-sm sm:text-base font-poppins ${
-            canResend
-              ? "text-[#4676FA] hover:underline cursor-pointer"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
+          className={`font-semibold text-sm sm:text-base font-poppins ${canResend
+            ? "text-[#4676FA] hover:underline cursor-pointer"
+            : "text-gray-400 cursor-not-allowed"
+            }`}
         >
           {"Resend OTP?"} {!canResend > 0 && `${resendTimer} s`}
         </button>
@@ -180,11 +193,10 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
         <motion.button
           onClick={handleVerify}
           disabled={!isOtpComplete || isOtpVerifying || sendingOtp}
-          className={`w-full py-3 sm:py-4 rounded-lg font-bold text-sm sm:text-base text-white transition-all duration-300 ${
-            isOtpComplete && !isOtpVerifying
-              ? "bg-[#4676FA] hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-lg"
-              : "bg-gray-300 cursor-not-allowed"
-          }`}
+          className={`w-full py-3 sm:py-4 rounded-lg font-bold text-sm sm:text-base text-white transition-all duration-300 ${isOtpComplete && !isOtpVerifying
+            ? "bg-[#4676FA] hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-lg"
+            : "bg-gray-300 cursor-not-allowed"
+            }`}
           whileHover={isOtpComplete && !isOtpVerifying ? { scale: 1.02 } : {}}
           whileTap={isOtpComplete && !isOtpVerifying ? { scale: 0.98 } : {}}
         >
@@ -200,17 +212,17 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
       </div>
 
       {/* Divider */}
-      <div className="relative my-4 sm:my-6 px-2">
+      {/* <div className="relative my-4 sm:my-6 px-2">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300"></div>
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="px-4 bg-white text-gray-500 font-medium">OR</span>
         </div>
-      </div>
+      </div> */}
 
       {/* Google Login */}
-      <div className="px-2">
+      {/* <div className="px-2">
         <motion.button
           onClick={handleGoogleLogin}
           className="w-full py-3 sm:py-4 px-4 border border-gray-300 rounded-lg font-medium text-sm sm:text-base text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 sm:gap-3"
@@ -237,7 +249,7 @@ export default function OTPStep({ otp, setOtp, email, setCurrentStep }) {
           </svg>
           Login with Google
         </motion.button>
-      </div>
+      </div> */}
     </motion.div>
   );
 }

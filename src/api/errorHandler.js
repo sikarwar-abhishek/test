@@ -24,12 +24,12 @@ export const handleApiError = (error, customMessage = "") => {
         errorType = ERROR_TYPES.VALIDATION;
         errorMessage = data?.message || "Invalid request data";
         break;
-      case 401:
-        errorType = ERROR_TYPES.UNAUTHORIZED;
-        errorMessage = "Please login to continue";
-        Cookies.remove("authToken");
-        window.location.href = "/login";
-        break;
+      // case 401:
+      //   errorType = ERROR_TYPES.UNAUTHORIZED;
+      //   errorMessage = "Please login to continue";
+      //   Cookies.remove("authToken");
+      //   window.location.href = "/login";
+      //   break;
       case 403:
         errorType = ERROR_TYPES.FORBIDDEN;
         errorMessage =

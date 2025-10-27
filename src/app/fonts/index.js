@@ -1,6 +1,19 @@
 import localFont from "next/font/local";
 import { Inter, Montserrat, Open_Sans, Poppins, Rubik } from "next/font/google";
 
+const arial = localFont({
+  src: "./local/arial.woff2",
+  variable: "--font-arial",
+  display: "swap",
+  weight: "900",
+});
+
+const arialR = localFont({
+  src: "./local/ArialCE.woff2",
+  variable: "--font-arialR",
+  display: "swap",
+  weight: "400",
+})
 const fDemoBold = localFont({
   src: "./local/FDEMO-bold.woff2",
   variable: "--font-fdemo-bold",
@@ -88,4 +101,6 @@ export {
   montserrat,
   opensans,
   monasans,
+  arial,
+  arialR
 };

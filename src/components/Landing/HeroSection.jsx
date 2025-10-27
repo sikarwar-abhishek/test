@@ -1,6 +1,7 @@
 import { ArrowUpRight, Play } from "lucide-react";
 import Icon from "../common/Icon";
 import GameCard from "./GameCard";
+import Link from "next/link";
 
 function HeroSection() {
   return (
@@ -21,14 +22,38 @@ function HeroSection() {
             new brain-teasing puzzle every day. Track your progress and climb
             the leaderboard!
           </p>
-          <button
-            className="mt-4 sm:mt-8 self-start py-2 px-6 sm:py-3 sm:px-8 rounded-xl gap-2 sm:gap-4 border border-transparent bg-blue-500 text-white font-nunito font-bold flex items-center justify-center text-sm sm:text-base
+          <div className="flex gap-2">
+            {/* border border-blue-600 rounded mx-2 text-blue-600 hover:bg-blue-50 font-semibold mt-1 mb-1 text-center */}
+            {/* <button
+              className="mt-4 sm:mt-8 self-start py-2 px-6 sm:py-3 sm:px-8 rounded-xl gap-2 sm:gap-4 border border-transparent bg-blue-500 text-white font-nunito font-bold flex items-center justify-center text-sm sm:text-base
   transition-all duration-300 ease-in-out
   hover:-translate-y-1 hover:border-blue-400 hover:shadow-md hover:shadow-blue-400/40"
-          >
-            Download Now
-            <ArrowUpRight size={20} className="sm:w-6 sm:h-6" />
-          </button>
+            >
+              Login
+            </button> */}
+            <div className="flex items-center gap-2 sm:gap-6 mt-4 sm:mt-8">
+              <Link
+                href="/login"
+                className=" py-[6px] px-6 sm:py-3 sm:px-8 rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-nunito text-base font-semibold text-center"
+              >
+                Login
+              </Link>
+
+              <span className=" text-gray-500 font-nunito font-medium text-sm sm:text-base">
+                or
+              </span>
+
+              <button
+                className="py-2 px-2 sm:py-3 sm:px-8 rounded-xl border border-transparent bg-blue-500 text-white font-nunito font-bold flex items-center justify-center text-sm sm:text-base
+    transition-all duration-300 ease-in-out
+    hover:-translate-y-1 hover:border-blue-400 whitespace-nowrap hover:shadow-md hover:shadow-blue-400/40"
+              >
+                Download the App
+                <ArrowUpRight size={20} className="sm:w-6 sm:h-6 ml-2" />
+              </button>
+            </div>
+
+          </div>
         </div>
       </div>
 
@@ -39,10 +64,10 @@ function HeroSection() {
             decorPos="bottomLeft"
             containerClass="w-[200px] sm:w-[240px] lg:w-[280px] max-h-[156px] sm:max-h-[187px] lg:max-h-[218px]"
           >
-            <button className="absolute z-20 flex items-center gap-1 sm:gap-2 border border-white top-2/3 font-semibold text-white hover:cursor-pointer hover:scale-105 transition-all duration-300 whitespace-nowrap px-2 sm:px-3 lg:px-4 py-1 rounded-[1rem_1rem_1rem_0] bg-blue-500 left-6 sm:left-8 lg:left-12 text-xs sm:text-sm lg:text-base">
+            <Link href='/challenges' className="select-none absolute z-20 flex items-center gap-1 sm:gap-2 border border-white top-2/3 font-semibold text-white hover:scale-105 cursor-pointer transition-all duration-300 whitespace-nowrap px-2 sm:px-3 lg:px-4 py-1 rounded-[1rem_1rem_1rem_0] bg-blue-500 left-6 sm:left-8 lg:left-12 text-xs sm:text-sm lg:text-base">
               <Play fill="white" size={12} className="sm:w-4 sm:h-4" />
               Play Challenge
-            </button>
+            </Link>
           </GameCard>
 
           <GameCard
@@ -54,9 +79,9 @@ function HeroSection() {
               name="light-cube"
               className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 absolute z-10 -top-3 -left-3 sm:-top-4 sm:-left-4 lg:-top-5 lg:-left-5"
             />
-            <button className="absolute z-20 flex items-center gap-1 sm:gap-2 border-2 border-red-300 font-semibold text-black hover:cursor-pointer hover:scale-105 transition-all duration-300 whitespace-nowrap px-4 sm:px-6 lg:px-8 py-1 sm:py-2 rounded-[2rem_2rem_2rem_0] bg-white -right-6 sm:-right-8 lg:-right-12 top-1/2 text-sm sm:text-lg lg:text-2xl leading-none -translate-y-[50%]">
+            <div className="select-none absolute z-20 flex items-center gap-1 sm:gap-2 border-2 border-red-300 font-semibold text-black transition-all duration-300 whitespace-nowrap px-4 sm:px-6 lg:px-8 py-1 sm:py-2 rounded-[2rem_2rem_2rem_0] bg-white -right-6 sm:-right-8 lg:-right-12 top-1/2 text-sm sm:text-lg lg:text-2xl leading-none -translate-y-[50%]">
               Shapes
-            </button>
+            </div>
           </GameCard>
 
           <GameCard
@@ -68,9 +93,9 @@ function HeroSection() {
               name="emoji"
               className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 absolute z-10 -top-6 -left-6 sm:-top-8 sm:-left-8 lg:-top-12 lg:-left-12"
             />
-            <button className="absolute z-20 flex items-center gap-1 sm:gap-2 border-2 border-red-300 font-semibold text-black hover:cursor-pointer hover:scale-105 transition-all duration-300 whitespace-nowrap px-4 sm:px-6 lg:px-8 py-1 sm:py-2 rounded-[2rem_2rem_0_2rem] bg-white -left-6 sm:-left-8 lg:-left-12 bottom-2/3 text-sm sm:text-lg lg:text-2xl leading-none -translate-y-[50%]">
+            <div className="select-none absolute z-20 flex items-center gap-1 sm:gap-2 border-2 border-red-300 font-semibold text-black transition-all duration-300 whitespace-nowrap px-4 sm:px-6 lg:px-8 py-1 sm:py-2 rounded-[2rem_2rem_0_2rem] bg-white -left-6 sm:-left-8 lg:-left-12 bottom-2/3 text-sm sm:text-lg lg:text-2xl leading-none -translate-y-[50%]">
               Puzzles
-            </button>
+            </div>
           </GameCard>
 
           <GameCard
@@ -78,9 +103,9 @@ function HeroSection() {
             decorPos="topRight"
             containerClass="-translate-y-[35%] -translate-x-[12%] aspect-square scale-70 -translate-y-4 sm:-translate-y-6 lg:-translate-y-8"
           >
-            <button className="absolute z-20 flex items-center gap-1 sm:gap-2 border-2 border-red-300 font-semibold text-black hover:cursor-pointer hover:scale-105 transition-all duration-300 whitespace-nowrap px-4 sm:px-6 lg:px-8 py-1 sm:py-2 rounded-[2rem_2rem_0_2rem] bg-white -right-12 sm:-right-16 lg:-right-24 bottom-1/2 text-sm sm:text-lg lg:text-2xl leading-none -translate-y-[50%]">
+            <div className="select-none absolute z-20 flex items-center gap-1 sm:gap-2 border-2 border-red-300 font-semibold text-black transition-all duration-300 whitespace-nowrap px-4 sm:px-6 lg:px-8 py-1 sm:py-2 rounded-[2rem_2rem_0_2rem] bg-white -right-12 sm:-right-16 lg:-right-24 bottom-1/2 text-sm sm:text-lg lg:text-2xl leading-none -translate-y-[50%]">
               Crosswords
-            </button>
+            </div>
           </GameCard>
         </div>
       </div>

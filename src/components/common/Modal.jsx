@@ -10,8 +10,14 @@ import Image from "next/image";
 
 export function Modal({ isOpen, onClose, onSubmit }) {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto bg-white rounded-2xl p-8 border-0 shadow-xl">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
+      <DialogContent className="max-w-md mx-auto bg-white rounded-2xl p-8 border-0 shadow-xl [&>button]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">
           Puzzle Submission Confirmation
         </DialogTitle>

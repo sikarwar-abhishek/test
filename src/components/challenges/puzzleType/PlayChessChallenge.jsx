@@ -59,7 +59,7 @@ function PlayChessChallenge({ challengeId, currentPuzzle }) {
     onSuccess: (data) => {
       // Invalidate challengesList query to refresh data
       queryClient.invalidateQueries(["challengesList", challengeId]);
-      toast.success("feedback submitted successfully.");
+      toast.success("Feedback submitted successfully.");
     },
   });
 
