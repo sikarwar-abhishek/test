@@ -7,7 +7,7 @@ import OTPStep from "./OTPStep";
 import OnboardingPage from "../onboarding/OnboardingPage";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import loginPageImage from "@/public/asset/container.png";
+import loginPageImage from "/asset/container.png";
 
 function LoginPage() {
   const [currentStep, setCurrentStep] = useState(1);
