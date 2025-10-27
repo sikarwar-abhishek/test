@@ -7,7 +7,6 @@ import OTPStep from "./OTPStep";
 import OnboardingPage from "../onboarding/OnboardingPage";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import loginPageImage from "/asset/container.png";
 
 function LoginPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -66,7 +65,7 @@ function LoginPage() {
         <div className="fixed w-screen h-screen inset-0 place-content-center">
           <div className="rounded-xl relative w-[calc(80dvw-2rem)] ml-auto mr-4 h-[calc(100dvh-2rem)]">
             <Image
-              src={loginPageImage}
+              src={'/asset/container.png'}
               alt="Daily IQ Onboarding"
               fill
               className="w-full h-auto object-fill"
